@@ -269,7 +269,7 @@ def admin():
         'approved': sum(1 for a in apps if a['status'] == 'Approved'),
         'rejected': sum(1 for a in apps if a['status'] == 'Rejected'),
     }
-    return render_template('admin.html', apps=apps, users=users, transactions=transactions, stats=stats)
+    return render_template('admin.html', apps=apps, users=users, transactions=transactions, stats=stats, pan_cost=150)
 
 @app.route('/update_status/<int:app_id>', methods=['POST'])
 def update_status(app_id):
