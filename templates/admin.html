@@ -312,8 +312,8 @@
               </td>
               <td><span class="badge-role">{{ u.role }}</span></td>
               <td>
-                <span class="bal-chip">₹{{ "%.2f"|format(u.balance) }}</span>
-                {% if u.balance < pan_cost %}
+                <span class="bal-chip">₹{{ "%.2f"|format(u.wallet) }}</span>
+                {% if u.wallet < pan_cost %}
                 <span style="margin-left:6px;background:#fff3cd;color:#856404;font-size:0.68rem;font-weight:600;padding:2px 7px;border-radius:20px;display:inline-block;">Low</span>
                 {% endif %}
               </td>
