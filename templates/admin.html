@@ -152,10 +152,10 @@
         <p>Review applicant details and update statuses</p>
       </div>
 
-      {% set total    = applications|length %}
-      {% set pending  = applications|selectattr('status','equalto','Pending')|list|length %}
-      {% set approved = applications|selectattr('status','equalto','Approved')|list|length %}
-      {% set rejected = applications|selectattr('status','equalto','Rejected')|list|length %}
+      {% set total    = apps|length %}
+      {% set pending  = apps|selectattr('status','equalto','Pending')|list|length %}
+      {% set approved = apps|selectattr('status','equalto','Approved')|list|length %}
+      {% set rejected = apps|selectattr('status','equalto','Rejected')|list|length %}
       <div class="stats-grid">
         <div class="stat-card gold"   style="cursor:pointer;" onclick="setFilter('all')"><div class="stat-label">Total</div><div class="stat-num">{{ total }}</div><div class="stat-sub">Click to show all</div></div>
         <div class="stat-card orange" style="cursor:pointer;" onclick="setFilter('pending')"><div class="stat-label">Pending</div><div class="stat-num">{{ pending }}</div><div class="stat-sub">Click to filter</div></div>
@@ -188,7 +188,7 @@
             <tr><th>ID</th><th>Applicant</th><th>Full Name</th><th>Category</th><th>Mobile</th><th>Submitted</th><th>Status</th><th>Details</th><th>Action</th></tr>
           </thead>
           <tbody>
-            {% for app in applications %}
+            {% for app in apps %}
             <tr class="app-row"
                 data-status="{{ app.status.lower() }}"
                 data-search="{{ app.id }} {{ app.full_name|lower }} {{ app.username|lower }} {{ app.mobile }} {{ app.email|lower }} {{ app.pan_type|lower }} {{ app.app_category|lower }} {{ app.submitted_at }}">
