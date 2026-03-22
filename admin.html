@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel — PAN Portal</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+/* ── Tabs ── */
+.tab-section { display: none; }
+.tab-section.active { display: block; }
+
+/* ── Toolbar ── */
+.toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.search-box { position:relative; flex:1; min-width:200px; }
+.search-box svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; fill:#aaa; pointer-events:none; }
+.search-box input { width:100%; padding:9px 12px 9px 38px; border:1.5px solid #e0e6ee; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.88rem; color:#1e2d45; outline:none; background:#f9fafb; transition:border-color .2s; }
+.search-box input:focus { border-color:var(--gold); background:#fff; }
+.filter-btn { padding:9px 16px; border:1.5px solid #e0e6ee; border-radius:8px; background:#f9fafb; font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:600; color:#666; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.filter-btn:hover { border-color:var(--gold); color:var(--navy); background:#fffdf0; }
+.filter-btn.active { border-color:var(--gold); background:var(--gold); color:var(--navy); }
+.result-count { font-size:0.78rem; color:#999; padding:8px 4px; white-space:nowrap; }
+.no-results { text-align:center; padding:48px 20px; color:#aaa; display:none; }
+.no-results svg { width:40px; height:40px; fill:#ddd; margin-bottom:10px; }
+
+/* ── Modal ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,22,40,0.7); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal { background:#fff; border-radius:20px; width:760px; max-width:95vw; max-height:88vh; overflow-y:auto; padding:36px; position:relative; animation:slideUp .25s ease; }
+@keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.modal-close { position:absolute; top:16px; right:20px; background:#f0f0f0; border:none; border-radius:50%; width:32px; height:32px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:#e0e0e0; }
+.modal-title { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--navy); margin-bottom:4px; }
+.modal-sub { font-size:0.82rem; color:#888; margin-bottom:24px; }
+.detail-section { margin-bottom:20px; }
+.detail-section h5 { font-size:0.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); font-weight:700; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid #f0f0f0; }
+.detail-row { display:flex; margin-bottom:8px; }
+.detail-key { font-size:0.78rem; color:#888; min-width:130px; }
+.detail-val { font-size:0.82rem; color:var(--navy); font-weight:500; }
+.doc-preview-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:8px; }
+.doc-thumb { border:1.5px solid #eee; border-radius:10px; background:#fafafa; text-align:center; padding:12px 8px; }
+.doc-thumb img { width:100%; height:70px; object-fit:cover; border-radius:6px; margin-bottom:6px; }
+.doc-thumb .doc-pdf { height:70px; display:flex; align-items:center; justify-content:center; font-size:2rem; }
+.doc-thumb .doc-label { font-size:0.7rem; color:#666; }
+.doc-thumb a { display:block; margin-top:6px; font-size:0.7rem; color:var(--gold); font-weight:600; text-decoration:none; }
+.doc-thumb.empty { opacity:.4; }
+.view-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; background:#f0f4f8; border:1px solid #e0e6ee; border-radius:6px; font-size:0.78rem; color:var(--navy); font-weight:600; cursor:pointer; text-decoration:none; transition:all .15s; }
+.view-btn:hover { background:var(--navy); color:#fff; }
+
+/* ── Users table ── */
+.badge-role { display:inline-block; background:#eff6ff; color:#1d4ed8; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:capitalize; }
+.bal-chip { display:inline-block; background:#f0fff6; color:#166534; font-weight:700; font-size:0.88rem; padding:3px 10px; border-radius:8px; border:1px solid #a3e9c0; }
+.add-inline { display:flex; gap:6px; align-items:center; }
+.add-inline input[type=number] { width:75px; padding:6px 10px; border:1.5px solid #ddd; border-radius:7px; font-family:'DM Sans',sans-serif; font-size:0.83rem; outline:none; }
+.add-inline input[type=number]:focus { border-color:var(--gold); }
+.btn-add-sm { padding:6px 12px; background:linear-gradient(135deg,var(--gold),#a8893a); color:var(--navy); border:none; border-radius:7px; font-weight:700; font-size:0.78rem; cursor:pointer; white-space:nowrap; }
+.btn-del { padding:6px 12px; background:#fff0f0; color:#e74c3c; border:1px solid #fcc; border-radius:7px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-del:hover { background:#e74c3c; color:#fff; border-color:#e74c3c; }
+
+/* Txn list */
+.txn-row { display:flex; align-items:center; gap:12px; padding:11px 20px; border-bottom:1px solid #f5f5f5; }
+.txn-row:last-child { border-bottom:none; }
+.txn-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; flex-shrink:0; }
+.txn-dot.credit { background:#e9f9f0; }
+.txn-dot.debit  { background:#fef2f2; }
+.txn-amt { font-weight:700; font-size:0.88rem; }
+.txn-amt.credit { color:#2ecc71; }
+.txn-amt.debit  { color:#e74c3c; }
+
+/* Confirm delete modal */
+.confirm-modal { display:none; position:fixed; inset:0; background:rgba(10,22,40,0.6); z-index:2000; align-items:center; justify-content:center; }
+.confirm-modal.open { display:flex; }
+.confirm-box { background:#fff; border-radius:16px; padding:32px; width:360px; text-align:center; animation:slideUp .2s ease; }
+.confirm-box h4 { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--navy); margin-bottom:8px; }
+.confirm-box p { font-size:0.88rem; color:#666; margin-bottom:24px; }
+.confirm-actions { display:flex; gap:12px; justify-content:center; }
+.btn-confirm-del { padding:10px 24px; background:#e74c3c; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer; }
+.btn-confirm-cancel { padding:10px 24px; background:#f0f0f0; color:#666; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
+
+/* ── Top Navbar ── */
+.topbar { display:flex; align-items:center; justify-content:space-between; background:#fff; border-bottom:1px solid #e8ecf0; padding:0 32px; height:60px; position:sticky; top:0; z-index:100; }
+.topbar-title { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--navy); font-weight:700; }
+.topbar-right { display:flex; align-items:center; gap:16px; position:relative; }
+.user-menu-btn { display:flex; align-items:center; gap:10px; background:#f4f6f9; border:1.5px solid #e0e6ee; border-radius:10px; padding:7px 14px 7px 10px; cursor:pointer; transition:all 0.15s; }
+.user-menu-btn:hover { border-color:var(--gold); background:#fffdf0; }
+.user-menu-avatar { width:30px; height:30px; background:#e74c3c; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.82rem; }
+.user-menu-name { font-size:0.85rem; font-weight:600; color:var(--navy); }
+.user-menu-caret { font-size:0.6rem; color:#aaa; margin-left:2px; }
+.user-dropdown { display:none; position:absolute; top:calc(100% + 8px); right:0; background:#fff; border:1.5px solid #e0e6ee; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.1); min-width:180px; overflow:hidden; z-index:200; }
+.user-dropdown.open { display:block; animation:fadeDown 0.15s ease; }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.dropdown-header { padding:12px 16px; border-bottom:1px solid #f0f0f0; background:#fafbfc; }
+.dropdown-header .dh-name { font-weight:700; font-size:0.88rem; color:var(--navy); }
+.dropdown-header .dh-role { font-size:0.72rem; color:#aaa; margin-top:2px; }
+.dropdown-item { display:flex; align-items:center; gap:10px; padding:11px 16px; font-size:0.85rem; color:#555; text-decoration:none; transition:background 0.15s; }
+.dropdown-item:hover { background:#f5f5f5; }
+.dropdown-item.danger { color:#dc2626; }
+.dropdown-item.danger:hover { background:#fef2f2; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="logo-name">PAN <span>Admin</span></div>
+      <div class="logo-sub">Control Panel</div>
+    </div>
+    <nav>
+      <a class="nav-item active" id="nav-apps" onclick="switchTab('apps')" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        All Applications
+      </a>
+      <a class="nav-item" id="nav-users" onclick="switchTab('users')" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        Users & Wallet
+      </a>
+    </nav>
+    <div class="sidebar-footer" style="display:none;"></div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-height:100vh;">
+  <!-- Top Navbar -->
+  <div class="topbar">
+    <div class="topbar-title">PAN Admin Panel</div>
+    <div class="topbar-right">
+      <div class="user-menu-btn" onclick="toggleDropdown()">
+        <div class="user-menu-avatar">A</div>
+        <span class="user-menu-name">Administrator</span>
+        <span class="user-menu-caret">▼</span>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="dropdown-header">
+          <div class="dh-name">Administrator</div>
+          <div class="dh-role">Super Admin</div>
+        </div>
+        <a href="{{ url_for('logout') }}" class="dropdown-item danger">
+          🚪 Logout
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content">
+    {% with msgs = get_flashed_messages() %}
+      {% if msgs %}<div class="flash-msg" style="margin-bottom:20px;background:#e9f9f0;border-left-color:#2ecc71;color:#166534;">{{ msgs[0] }}</div>{% endif %}
+    {% endwith %}
+
+    <!-- ══════════ TAB 1 — ALL APPLICATIONS ══════════ -->
+    <div class="tab-section active" id="tab-apps">
+      <div class="page-header">
+        <h1>All Applications</h1>
+        <p>Review applicant details and update statuses</p>
+      </div>
+
+      {% set total    = applications|length %}
+      {% set pending  = applications|selectattr('status','equalto','Pending')|list|length %}
+      {% set approved = applications|selectattr('status','equalto','Approved')|list|length %}
+      {% set rejected = applications|selectattr('status','equalto','Rejected')|list|length %}
+      <div class="stats-grid">
+        <div class="stat-card gold"   style="cursor:pointer;" onclick="setFilter('all')"><div class="stat-label">Total</div><div class="stat-num">{{ total }}</div><div class="stat-sub">Click to show all</div></div>
+        <div class="stat-card orange" style="cursor:pointer;" onclick="setFilter('pending')"><div class="stat-label">Pending</div><div class="stat-num">{{ pending }}</div><div class="stat-sub">Click to filter</div></div>
+        <div class="stat-card green"  style="cursor:pointer;" onclick="setFilter('approved')"><div class="stat-label">Approved</div><div class="stat-num">{{ approved }}</div><div class="stat-sub">Click to filter</div></div>
+        <div class="stat-card red"    style="cursor:pointer;" onclick="setFilter('rejected')"><div class="stat-label">Rejected</div><div class="stat-num">{{ rejected }}</div><div class="stat-sub">Click to filter</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="flex-direction:column;align-items:stretch;gap:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h3>Applications</h3>
+            <span style="font-size:0.8rem;color:#888;">{{ total }} records</span>
+          </div>
+          <div class="toolbar">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              <input type="text" id="searchInput" placeholder="Search by name, mobile, email, ID..." oninput="applyFilters()">
+            </div>
+            <button class="filter-btn active" id="btn-all"        onclick="setFilter('all')">All</button>
+            <button class="filter-btn"        id="btn-pending"    onclick="setFilter('pending')">🟡 Pending</button>
+            <button class="filter-btn"        id="btn-processing" onclick="setFilter('processing')">🔵 Processing</button>
+            <button class="filter-btn"        id="btn-approved"   onclick="setFilter('approved')">🟢 Approved</button>
+            <button class="filter-btn"        id="btn-rejected"   onclick="setFilter('rejected')">🔴 Rejected</button>
+            <span class="result-count" id="resultCount"></span>
+          </div>
+        </div>
+        {% if applications %}
+        <table id="appTable">
+          <thead>
+            <tr><th>ID</th><th>Applicant</th><th>Full Name</th><th>Category</th><th>Mobile</th><th>Submitted</th><th>Status</th><th>Details</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+            <tr class="app-row"
+                data-status="{{ app.status.lower() }}"
+                data-search="{{ app.id }} {{ app.full_name|lower }} {{ app.username|lower }} {{ app.mobile }} {{ app.email|lower }} {{ app.pan_type|lower }} {{ app.app_category|lower }} {{ app.submitted_at }}">
+              <td><strong>#{{ app.id }}</strong></td>
+              <td>{{ app.username }}</td>
+              <td>
+                <div style="font-weight:500;">{{ app.full_name }}</div>
+                <div style="font-size:0.75rem;color:#888;">{{ app.email }}</div>
+              </td>
+              <td>
+                <span style="font-size:0.8rem;padding:3px 10px;border-radius:20px;font-weight:600;background:{% if app.app_category=='New PAN' %}#eff6ff;color:#1d4ed8{% else %}#f5f0ff;color:#6d28d9{% endif %};">
+                  {{ app.app_category or 'New PAN' }}
+                </span>
+              </td>
+              <td>{{ app.mobile }}</td>
+              <td style="font-size:0.8rem;color:#888;">{{ app.submitted_at }}</td>
+              <td><span class="status-badge {{ app.status.lower() }}">{{ app.status }}</span></td>
+              <td>
+                <button class="view-btn" onclick="openModal({{ app.id }})">
+                  <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                  View
+                </button>
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('update_status', app_id=app.id) }}"
+                      enctype="multipart/form-data"
+                      style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"
+                      id="form-{{ app.id }}">
+                  <select name="status" class="status-select"
+                          onchange="toggleReceipt(this, {{ app.id }})">
+                    <option {% if app.status=='Pending' %}selected{% endif %}>Pending</option>
+                    <option {% if app.status=='Processing' %}selected{% endif %}>Processing</option>
+                    <option {% if app.status=='Approved' %}selected{% endif %}>Approved</option>
+                    <option {% if app.status=='Rejected' %}selected{% endif %}>Rejected</option>
+                  </select>
+                  <!-- Receipt upload — shown when Processing selected -->
+                  <div id="receipt-box-{{ app.id }}"
+                       style="display:{% if app.status=='Processing' %}flex{% else %}none{% endif %};
+                              align-items:center;gap:6px;margin-top:4px;width:100%;">
+                    <label style="font-size:0.72rem;color:#888;white-space:nowrap;">📎 Receipt:</label>
+                    <input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png"
+                           style="font-size:0.75rem;max-width:160px;">
+                    {% if app.receipt %}
+                    <a href="{{ url_for('download_receipt', app_id=app.id) }}"
+                       style="font-size:0.72rem;color:var(--gold);font-weight:600;white-space:nowrap;text-decoration:none;">
+                       ✓ View Receipt
+                    </a>
+                    {% endif %}
+                  </div>
+                  <button type="submit" class="btn-update">Update</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="no-results" id="noResults">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <p>No applications match your search.</p>
+        </div>
+        {% else %}
+        <div class="empty-state"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg><p>No applications yet.</p></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ══════════ TAB 2 — USERS & WALLET ══════════ -->
+    <div class="tab-section" id="tab-users">
+      <div class="page-header">
+        <h1>Users & Wallet</h1>
+        <p>Manage registered users, wallet balances and transactions</p>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card gold"><div class="stat-label">Total Users</div><div class="stat-num">{{ users|length }}</div><div class="stat-sub">Registered</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Wallet</div><div class="stat-num">₹{{ "%.0f"|format(users|sum(attribute='balance')) }}</div><div class="stat-sub">All users combined</div></div>
+        <div class="stat-card orange"><div class="stat-label">Per Application</div><div class="stat-num">₹{{ pan_cost }}</div><div class="stat-sub">Fixed charge</div></div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header" style="flex-direction:column;align-items:stretch;gap:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h3>Registered Users</h3>
+            <span style="font-size:0.8rem;color:#888;" id="userCount">{{ users|length }} users</span>
+          </div>
+          <div class="toolbar">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              <input type="text" id="userSearch" placeholder="Search by username..." oninput="filterUsers()">
+            </div>
+          </div>
+        </div>
+        {% if users %}
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Registered As</th>
+              <th>Wallet Balance</th>
+              <th>Applications</th>
+              <th>Add Amount</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr class="user-row" data-usearch="{{ u.username|lower }} {{ u.id }}">
+              <td style="color:#aaa;font-size:0.8rem;">#{{ u.id }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="width:36px;height:36px;background:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:700;font-size:0.9rem;flex-shrink:0;">
+                    {{ u.username[0].upper() }}
+                  </div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:var(--navy);">{{ u.username }}</div>
+                    <div style="font-size:0.72rem;color:#aaa;">User account</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge-role">{{ u.role }}</span></td>
+              <td>
+                <span class="bal-chip">₹{{ "%.2f"|format(u.balance) }}</span>
+                {% if u.balance < pan_cost %}
+                <span style="margin-left:6px;background:#fff3cd;color:#856404;font-size:0.68rem;font-weight:600;padding:2px 7px;border-radius:20px;display:inline-block;">Low</span>
+                {% endif %}
+              </td>
+              <td style="font-size:0.85rem;color:#555;">{{ u.app_count }} applied</td>
+              <td>
+                <form method="POST" action="{{ url_for('admin_wallet_add') }}" class="add-inline">
+                  <input type="hidden" name="user_id" value="{{ u.id }}">
+                  <input type="number" name="amount" placeholder="₹ amt" min="1" required>
+                  <button type="submit" class="btn-add-sm">+ Add</button>
+                </form>
+              </td>
+              <td>
+                <button class="btn-del" onclick="confirmDelete({{ u.id }}, '{{ u.username }}')">🗑 Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><p>No users registered yet.</p></div>
+        {% endif %}
+      </div>
+
+      <!-- Wallet Transactions -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Transaction History</h3>
+          <span style="font-size:0.8rem;color:#888;">Last 50 transactions</span>
+        </div>
+        {% if wallet_txns %}
+          {% for t in wallet_txns %}
+          <div class="txn-row">
+            <div class="txn-dot {{ t.txn_type }}">{{ '➕' if t.txn_type=='credit' else '➖' }}</div>
+            <div style="flex:1;">
+              <div style="font-size:0.85rem;color:var(--navy);font-weight:500;">{{ t.username }} — {{ t.description }}</div>
+              <div style="font-size:0.72rem;color:#aaa;">{{ t.created_at }}</div>
+            </div>
+            <div class="txn-amt {{ t.txn_type }}">{{ '+' if t.txn_type=='credit' else '-' }}₹{{ "%.0f"|format(t.amount) }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:28px;color:#aaa;font-size:0.88rem;">No transactions yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </main>
+  </div><!-- /flex wrapper -->
+</div>
+
+<!-- ── Detail Modal ── -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="m-title">Application Details</div>
+    <div class="modal-sub" id="m-sub"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="detail-section">
+        <h5>Personal Information</h5>
+        <div class="detail-row"><span class="detail-key">Last Name</span><span class="detail-val" id="m-lastname"></span></div>
+        <div class="detail-row"><span class="detail-key">First Name</span><span class="detail-val" id="m-firstname"></span></div>
+        <div class="detail-row"><span class="detail-key">Middle Name</span><span class="detail-val" id="m-middlename"></span></div>
+        <div class="detail-row"><span class="detail-key">Name on PAN</span><span class="detail-val" id="m-name" style="color:var(--gold);font-weight:700;"></span></div>
+        <div class="detail-row"><span class="detail-key">Father's Name</span><span class="detail-val" id="m-father"></span></div>
+        <div class="detail-row"><span class="detail-key">Date of Birth</span><span class="detail-val" id="m-dob"></span></div>
+        <div class="detail-row"><span class="detail-key">Gender</span><span class="detail-val" id="m-gender"></span></div>
+      </div>
+      <div class="detail-section">
+        <h5>Contact Details</h5>
+        <div class="detail-row"><span class="detail-key">Mobile</span><span class="detail-val" id="m-mobile"></span></div>
+        <div class="detail-row"><span class="detail-key">Email</span><span class="detail-val" id="m-email"></span></div>
+        <div class="detail-row"><span class="detail-key">Aadhaar No.</span><span class="detail-val" id="m-aadhaar"></span></div>
+        <div class="detail-row"><span class="detail-key">PAN Type</span><span class="detail-val" id="m-pantype"></span></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h5>Address</h5>
+      <div class="detail-row"><span class="detail-key">Address</span><span class="detail-val" id="m-address"></span></div>
+      <div class="detail-row"><span class="detail-key">City / State / PIN</span><span class="detail-val" id="m-location"></span></div>
+    </div>
+    <div class="detail-section" id="m-correction-section">
+      <h5>Fields to Correct</h5>
+      <div id="m-correction-fields"></div>
+    </div>
+    <div class="detail-section">
+      <h5>Uploaded Documents</h5>
+      <div class="doc-preview-grid" id="m-docs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirm Delete Modal ── -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <h4>🗑 Delete User</h4>
+    <p id="confirmText">Are you sure you want to delete this user? All their applications and wallet data will also be deleted.</p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <form id="deleteForm" method="POST" style="display:inline;">
+        <button type="submit" class="btn-confirm-del">Yes, Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Tab switching ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+}
+
+// ── App filter / search ──
+let activeFilter = 'all';
+function setFilter(s) {
+  activeFilter = s;
+  ['all','pending','processing','approved','rejected'].forEach(k => {
+    const b = document.getElementById('btn-'+k);
+    if (b) b.classList.toggle('active', k===s);
+  });
+  applyFilters();
+}
+function applyFilters() {
+  const q    = document.getElementById('searchInput').value.toLowerCase().trim();
+  const rows = document.querySelectorAll('.app-row');
+  let vis = 0;
+  rows.forEach(r => {
+    const show = (activeFilter==='all' || r.dataset.status===activeFilter) && (!q || r.dataset.search.includes(q));
+    r.style.display = show ? '' : 'none';
+    if (show) vis++;
+  });
+  const c = document.getElementById('resultCount');
+  if (c) c.textContent = (q || activeFilter!=='all') ? `${vis} of ${rows.length} shown` : `${rows.length} total`;
+  const nr = document.getElementById('noResults'), tbl = document.getElementById('appTable');
+  if (nr && tbl) { nr.style.display = vis===0?'block':'none'; tbl.style.display = vis===0?'none':''; }
+}
+
+// ── User search ──
+function filterUsers() {
+  const q    = document.getElementById('userSearch').value.toLowerCase().trim();
+  const rows = document.querySelectorAll('.user-row');
+  let vis = 0;
+  rows.forEach(r => {
+    const show = !q || r.dataset.usearch.includes(q);
+    r.style.display = show ? '' : 'none';
+    if (show) vis++;
+  });
+  const c = document.getElementById('userCount');
+  if (c) c.textContent = q ? `${vis} of ${rows.length} shown` : `${rows.length} users`;
+}
+
+// ── Application detail modal ──
+const BASE = "{{ url_for('static', filename='uploads/') }}";
+function openModal(id) {
+  fetch(`/admin/detail/${id}`)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('m-title').textContent = `Application #${d.id} — ${d.full_name}`;
+      document.getElementById('m-sub').textContent   = `${d.app_category||'New PAN'} · Submitted ${d.submitted_at} · Status: ${d.status}`;
+      document.getElementById('m-lastname').textContent   = d.last_name   || '—';
+      document.getElementById('m-firstname').textContent  = d.first_name  || '—';
+      document.getElementById('m-middlename').textContent = d.middle_name || '—';
+      document.getElementById('m-name').textContent    = d.full_name    || '—';
+      document.getElementById('m-father').textContent  = d.father_name  || '—';
+      document.getElementById('m-dob').textContent     = d.dob          || '—';
+      document.getElementById('m-gender').textContent  = d.gender       || '—';
+      document.getElementById('m-mobile').textContent  = d.mobile       || '—';
+      document.getElementById('m-email').textContent   = d.email        || '—';
+      document.getElementById('m-aadhaar').textContent = d.aadhaar      || '—';
+      document.getElementById('m-pantype').textContent = d.pan_type     || '—';
+      document.getElementById('m-address').textContent = d.address      || '—';
+      document.getElementById('m-location').textContent= [d.city,d.state,d.pincode].filter(Boolean).join(' / ') || '—';
+
+      const cs = document.getElementById('m-correction-section');
+      const cd = document.getElementById('m-correction-fields');
+      if (d.app_category==='Correction PAN' && d.correction_fields) {
+        cs.style.display = 'block';
+        cd.innerHTML = d.correction_fields.split(', ').filter(Boolean)
+          .map(f=>`<span style="display:inline-block;background:#fff3cd;color:#856404;border:1px solid #f0c040;font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:20px;margin:3px 4px 3px 0;">✏️ ${f}</span>`)
+          .join('') || '<span style="color:#aaa;font-size:0.82rem;">None selected</span>';
+      } else { cs.style.display = 'none'; }
+
+      const docs = [
+        {label:'Passport Photo', file:d.photo,          icon:'📷'},
+        {label:'Signature',      file:d.signature,      icon:'✍️'},
+        {label:'Aadhaar Card',   file:d.aadhaar_doc,    icon:'🪪'},
+        {label:'Additional Doc', file:d.additional_doc, icon:'📎'},
+      ];
+      document.getElementById('m-docs').innerHTML = docs.map(doc => {
+        if (!doc.file) return `<div class="doc-thumb empty"><div class="doc-pdf">${doc.icon}</div><div class="doc-label">${doc.label}</div><div style="font-size:.68rem;color:#bbb;margin-top:4px;">Not uploaded</div></div>`;
+        const ext = doc.file.split('.').pop().toLowerCase();
+        const url = BASE + doc.file;
+        if (ext==='pdf') return `<div class="doc-thumb"><div class="doc-pdf">📄</div><div class="doc-label">${doc.label}</div><a href="${url}" target="_blank">View PDF</a></div>`;
+        return `<div class="doc-thumb"><img src="${url}" alt="${doc.label}"><div class="doc-label">${doc.label}</div><a href="${url}" target="_blank">View Full</a></div>`;
+      }).join('');
+      document.getElementById('detailModal').classList.add('open');
+    });
+}
+function closeModal() { document.getElementById('detailModal').classList.remove('open'); }
+document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+
+// ── Delete confirm ──
+function confirmDelete(uid, uname) {
+  document.getElementById('confirmText').textContent = `Delete user "${uname}"? All their applications, wallet balance and data will be permanently removed.`;
+  document.getElementById('deleteForm').action = `/admin/user/delete/${uid}`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); }
+document.getElementById('confirmModal').addEventListener('click', function(e) { if(e.target===this) closeConfirm(); });
+
+// ── Receipt upload toggle ──
+function toggleReceipt(sel, appId) {
+  const box = document.getElementById('receipt-box-' + appId);
+  if (box) box.style.display = sel.value === 'Processing' ? 'flex' : 'none';
+}
+
+// ── Top navbar dropdown ──
+function toggleDropdown() {
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.topbar-right')) {
+    document.getElementById('userDropdown').classList.remove('open');
+  }
+});
+
+window.addEventListener('DOMContentLoaded', () => applyFilters());
+</script>
+</body>
+</html>
