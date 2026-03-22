@@ -2,401 +2,367 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard — PAN Portal</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard - PAN Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-.wallet-banner {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--slate) 100%);
-  border-radius: 16px;
-  padding: 24px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 28px;
-  border: 1px solid rgba(201,168,76,0.3);
-  position: relative;
-  overflow: hidden;
-}
-.wallet-banner::after {
-  content: '₹';
-  position: absolute;
-  right: -10px; top: -20px;
-  font-size: 8rem;
-  color: rgba(201,168,76,0.07);
-  font-family: 'Playfair Display', serif;
-  pointer-events: none;
-}
-.wallet-left { display: flex; align-items: center; gap: 18px; }
-.wallet-icon {
-  width: 52px; height: 52px;
-  background: rgba(201,168,76,0.15);
-  border: 1.5px solid rgba(201,168,76,0.4);
-  border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem;
-}
-.wallet-label { font-size: 0.78rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-.wallet-amount { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold); }
-.wallet-sub { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
-
-.wallet-info {
-  display: flex; gap: 24px; align-items: center;
-}
-.winfo-item { text-align: center; }
-.winfo-val { font-size: 1rem; font-weight: 700; color: var(--gold); }
-.winfo-key { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
-
-.insufficient-warning {
-  background: #fff3cd;
-
-/* ── Top Navbar ── */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid #e8ecf0;
-  padding: 0 32px;
-  height: 60px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.topbar-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.1rem;
-  color: var(--navy);
-  font-weight: 700;
-}
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-}
-.user-menu-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f4f6f9;
-  border: 1.5px solid #e0e6ee;
-  border-radius: 10px;
-  padding: 7px 14px 7px 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.user-menu-btn:hover { border-color: var(--gold); background: #fffdf0; }
-.user-menu-avatar {
-  width: 30px; height: 30px;
-  background: var(--navy);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gold); font-weight: 700; font-size: 0.82rem;
-}
-.user-menu-name { font-size: 0.85rem; font-weight: 600; color: var(--navy); }
-.user-menu-caret { font-size: 0.6rem; color: #aaa; margin-left: 2px; }
-.user-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: #fff;
-  border: 1.5px solid #e0e6ee;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  min-width: 180px;
-  overflow: hidden;
-  z-index: 200;
-}
-.user-dropdown.open { display: block; animation: fadeDown 0.15s ease; }
-@keyframes fadeDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-.dropdown-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafbfc;
-}
-.dropdown-header .dh-name { font-weight: 700; font-size: 0.88rem; color: var(--navy); }
-.dropdown-header .dh-role { font-size: 0.72rem; color: #aaa; margin-top: 2px; }
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-  font-size: 0.85rem;
-  color: #555;
-  text-decoration: none;
-  transition: background 0.15s;
-  cursor: pointer;
-}
-.dropdown-item:hover { background: #f5f5f5; }
-.dropdown-item.danger { color: #dc2626; }
-.dropdown-item.danger:hover { background: #fef2f2; }
-  border-left: 4px solid #f39c12;
-  color: #856404;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  margin-bottom: 20px;
-}
-
-.toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.search-box { position: relative; flex: 1; min-width: 200px; }
-.search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; fill: #aaa; pointer-events: none; }
-.search-box input { width: 100%; padding: 9px 12px 9px 38px; border: 1.5px solid #e0e6ee; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: #1e2d45; outline: none; background: #f9fafb; transition: border-color 0.2s; }
-.search-box input:focus { border-color: var(--gold); background: #fff; }
-.filter-btn { padding: 9px 16px; border: 1.5px solid #e0e6ee; border-radius: 8px; background: #f9fafb; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; color: #666; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.filter-btn:hover { border-color: var(--gold); color: var(--navy); background: #fffdf0; }
-.filter-btn.active { border-color: var(--gold); background: var(--gold); color: var(--navy); }
-.result-count { font-size: 0.78rem; color: #999; padding: 8px 4px; white-space: nowrap; }
-.no-results { text-align: center; padding: 48px 20px; color: #aaa; display: none; }
-.no-results svg { width: 40px; height: 40px; fill: #ddd; margin-bottom: 10px; }
-
-/* Txn list */
-.txn-row { display: flex; align-items: center; gap: 12px; padding: 11px 20px; border-bottom: 1px solid #f5f5f5; }
-.txn-row:last-child { border-bottom: none; }
-.txn-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
-.txn-dot.credit { background: #e9f9f0; }
-.txn-dot.debit  { background: #fef2f2; }
-.txn-desc { flex: 1; font-size: 0.85rem; color: var(--navy); }
-.txn-date { font-size: 0.72rem; color: #aaa; }
-.txn-amt { font-weight: 700; font-size: 0.9rem; }
-.txn-amt.credit { color: #2ecc71; }
-.txn-amt.debit  { color: #e74c3c; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;min-height:100vh;display:flex}
+.sidebar{width:220px;background:linear-gradient(160deg,#0a1628,#1a2f5e);min-height:100vh;display:flex;flex-direction:column;padding:0;position:fixed;top:0;left:0;z-index:100}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-logo .logo-icon{width:40px;height:40px;background:rgba(212,175,55,0.15);border:1.5px solid #d4af37;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.sidebar-logo .logo-icon svg{width:20px;height:20px;fill:#d4af37}
+.sidebar-logo h2{font-family:'Playfair Display',serif;font-size:1rem;color:white}
+.sidebar-logo h2 span{color:#d4af37}
+.sidebar-logo p{font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase}
+.sidebar-nav{padding:20px 12px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:rgba(255,255,255,0.6);font-size:0.85rem;text-decoration:none;transition:all 0.2s;margin-bottom:4px}
+.nav-item:hover,.nav-item.active{background:rgba(212,175,55,0.15);color:#d4af37}
+.nav-item svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+.main-content{margin-left:220px;flex:1;display:flex;flex-direction:column}
+.topbar{background:white;padding:0 30px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8e4dc;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:1rem;font-weight:600;color:#1a1a2e}
+.user-menu{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.85rem;color:#444;transition:background 0.2s}
+.user-btn:hover{background:#f5f3ee}
+.user-avatar{width:32px;height:32px;background:#d4af37;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:0.85rem}
+.dropdown{position:absolute;right:0;top:calc(100% + 8px);background:white;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);min-width:200px;padding:8px;display:none;z-index:200}
+.dropdown.show{display:block}
+.dropdown-header{padding:10px 12px 8px;border-bottom:1px solid #f0ede8;margin-bottom:4px}
+.dropdown-header .d-name{font-weight:600;font-size:0.9rem;color:#1a1a2e}
+.dropdown-header .d-role{font-size:0.75rem;color:#888}
+.dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#444;font-size:0.85rem;transition:background 0.2s}
+.dropdown-item:hover{background:#f5f3ee}
+.dropdown-item svg{width:14px;height:14px;fill:currentColor}
+.dropdown-divider{height:1px;background:#f0ede8;margin:4px 0}
+.dropdown-item.logout{color:#dc2626}
+.page-content{padding:30px;flex:1}
+.page-header{margin-bottom:24px}
+.page-header h1{font-family:'Playfair Display',serif;font-size:1.8rem;color:#1a1a2e}
+.page-header p{color:#888;font-size:0.9rem;margin-top:4px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:white;border-radius:12px;padding:20px;position:relative;overflow:hidden;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;border:2px solid transparent}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.stat-card.active{border-color:#d4af37}
+.stat-bg{position:absolute;right:-10px;top:-10px;width:80px;height:80px;border-radius:50%;opacity:0.08}
+.stat-bg.yellow{background:#d4af37}
+.stat-bg.blue{background:#3b82f6}
+.stat-bg.green{background:#22c55e}
+.stat-bg.red{background:#ef4444}
+.stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:8px}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;color:#1a1a2e;font-weight:700}
+.stat-sub{font-size:0.75rem;color:#aaa;margin-top:4px}
+.wallet-banner{background:linear-gradient(135deg,#0a1628,#1a2f5e);border-radius:16px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.wallet-left{display:flex;align-items:center;gap:16px}
+.wallet-icon{width:50px;height:50px;background:rgba(212,175,55,0.15);border:2px solid rgba(212,175,55,0.4);border-radius:12px;display:flex;align-items:center;justify-content:center}
+.wallet-icon svg{width:24px;height:24px;fill:#d4af37}
+.wallet-label{font-size:0.75rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.wallet-amount{font-family:'Playfair Display',serif;font-size:2rem;color:white;font-weight:700}
+.wallet-amount span{color:#d4af37}
+.wallet-right{display:flex;gap:20px;flex-wrap:wrap}
+.winfo{text-align:center}
+.winfo-label{font-size:0.7rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.winfo-val{font-size:1.1rem;font-weight:600;color:white}
+.wallet-warning{background:#fef3cd;border:1px solid #ffc107;border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:0.85rem;color:#856404;display:flex;align-items:center;gap:8px}
+.section-card{background:white;border-radius:16px;overflow:hidden;margin-bottom:24px}
+.section-header{padding:20px 24px;border-bottom:1px solid #f0ede8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.section-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:#1a1a2e}
+.search-bar{display:flex;align-items:center;gap:8px;background:#f5f3ee;border-radius:8px;padding:8px 14px;min-width:240px}
+.search-bar input{border:none;background:none;outline:none;font-size:0.85rem;font-family:'Inter',sans-serif;width:100%;color:#444}
+.filter-row{padding:12px 24px;border-bottom:1px solid #f9f8f6;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid #e0ddd8;background:white;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;color:#666}
+.filter-btn:hover{border-color:#d4af37;color:#d4af37}
+.filter-btn.active{background:#d4af37;border-color:#d4af37;color:white}
+.result-count{margin-left:auto;font-size:0.78rem;color:#aaa}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 20px;text-align:left;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#888;background:#faf9f7;border-bottom:1px solid #f0ede8}
+td{padding:14px 20px;font-size:0.88rem;color:#444;border-bottom:1px solid #f9f8f6;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fdf9f0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:600}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.6}
+.badge.pending{background:#fef9ec;color:#b45309}
+.badge.processing{background:#eff6ff;color:#1d4ed8}
+.badge.approved{background:#f0fdf4;color:#15803d}
+.badge.rejected{background:#fef2f2;color:#dc2626}
+.btn-download{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#d4af37;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:background 0.2s}
+.btn-download:hover{background:#b8962e}
+.empty-state{padding:60px 20px;text-align:center;color:#aaa}
+.empty-state svg{width:48px;height:48px;fill:#ddd;margin-bottom:12px}
+.txn-list{padding:0}
+.txn-item{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid #f9f8f6}
+.txn-item:last-child{border-bottom:none}
+.txn-left{display:flex;align-items:center;gap:12px}
+.txn-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.txn-icon.credit{background:#f0fdf4}
+.txn-icon.debit{background:#fef2f2}
+.txn-icon svg{width:16px;height:16px}
+.txn-icon.credit svg{fill:#15803d}
+.txn-icon.debit svg{fill:#dc2626}
+.txn-desc{font-size:0.88rem;color:#1a1a2e;font-weight:500}
+.txn-date{font-size:0.75rem;color:#aaa;margin-top:2px}
+.txn-amount{font-weight:600;font-size:0.95rem}
+.txn-amount.credit{color:#15803d}
+.txn-amount.debit{color:#dc2626}
+.hidden{display:none!important}
+@media(max-width:768px){.sidebar{display:none}.main-content{margin-left:0}.stats-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-      <div class="logo-name">PAN <span>Portal</span></div>
-      <div class="logo-sub">Income Tax Dept.</div>
-    </div>
-    <nav>
-      <a href="{{ url_for('dashboard') }}" class="nav-item active">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard
-      </a>
-      <a href="{{ url_for('apply') }}" class="nav-item">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/></svg>New Application
-      </a>
-    </nav>
-    <div class="sidebar-footer" style="display:none;"></div>
-  </aside>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <h2>PAN <span>Portal</span></h2>
+    <p>Application System</p>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Dashboard
+    </a>
+    <a href="/apply" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      New Application
+    </a>
+  </nav>
+</div>
 
-  <div style="flex:1;display:flex;flex-direction:column;min-height:100vh;">
-  <!-- Top Navbar -->
+<div class="main-content">
   <div class="topbar">
-    <div class="topbar-title">PAN Card Portal</div>
-    <div class="topbar-right">
-      <div class="user-menu-btn" onclick="toggleDropdown()">
-        <div class="user-menu-avatar">{{ session.username[0].upper() }}</div>
-        <span class="user-menu-name">{{ session.username }}</span>
-        <span class="user-menu-caret">▼</span>
-      </div>
-      <div class="user-dropdown" id="userDropdown">
+    <span class="topbar-title">PAN Card Portal</span>
+    <div class="user-menu">
+      <button class="user-btn" onclick="toggleDropdown()">
+        <div class="user-avatar">{{ session.username[0].upper() }}</div>
+        {{ session.username }}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+      </button>
+      <div class="dropdown" id="userDropdown">
         <div class="dropdown-header">
-          <div class="dh-name">{{ session.username }}</div>
-          <div class="dh-role">Applicant</div>
+          <div class="d-name">{{ session.username }}</div>
+          <div class="d-role">Applicant</div>
         </div>
-        <a href="{{ url_for('dashboard') }}" class="dropdown-item">
-          🏠 Dashboard
+        <a href="/dashboard" class="dropdown-item">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          Dashboard
         </a>
-        <a href="{{ url_for('apply') }}" class="dropdown-item">
-          📄 New Application
+        <a href="/apply" class="dropdown-item">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+          New Application
         </a>
-        <a href="{{ url_for('logout') }}" class="dropdown-item danger">
-          🚪 Logout
+        <div class="dropdown-divider"></div>
+        <a href="/logout" class="dropdown-item logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
         </a>
       </div>
     </div>
   </div>
 
-  <main class="main-content">
+  <div class="page-content">
     <div class="page-header">
       <h1>My Dashboard</h1>
-      <p>Track applications and manage your wallet</p>
+      <p>Track your PAN Card applications</p>
     </div>
 
-    {% with msgs = get_flashed_messages() %}
-      {% if msgs %}<div class="flash-msg" style="margin-bottom:20px;background:#e9f9f0;border-left-color:#2ecc71;color:#166534;">{{ msgs[0] }}</div>{% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:0.88rem;{% if category=='error' %}background:#fef2f2;color:#dc2626;border:1px solid #fecaca{% else %}background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0{% endif %}">{{ message }}</div>
+    {% endfor %}
     {% endwith %}
 
     <!-- Wallet Banner -->
-    <div class="wallet-banner">
-      <div class="wallet-left">
-        <div class="wallet-icon">💳</div>
-        <div>
-          <div class="wallet-label">Wallet </div>
-          <div class="wallet-amount">₹{{ "%.2f"|format() }}</div>
-          <div class="wallet-sub">₹{{ pan_cost }} required per PAN application</div>
-        </div>
-      </div>
-      <div class="wallet-info">
-        <div class="winfo-item">
-          <div class="winfo-val">{{ ( // pan_cost)|int }}</div>
-          <div class="winfo-key">Applications possible</div>
-        </div>
-        <div style="width:1px; height:36px; background:rgba(255,255,255,0.1);"></div>
-        <div class="winfo-item">
-          <div class="winfo-val">{{ applications|length }}</div>
-          <div class="winfo-key">Total applied</div>
-        </div>
-      </div>
-    </div>
-
-    {% if  < pan_cost %}
-    <div class="insufficient-warning">
-      ⚠️ Insufficient  to apply. You need ₹{{ pan_cost }}. Please contact admin to top up your wallet.
-    </div>
+    {% if user.wallet < 150 %}
+    <div class="wallet-warning">⚠️ Low balance! Add funds to apply for PAN Card (₹150 required)</div>
     {% endif %}
 
+    <div class="wallet-banner">
+      <div class="wallet-left">
+        <div class="wallet-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="wallet-label">Wallet Balance</div>
+          <div class="wallet-amount">₹<span>{{ "%.2f"|format(user.wallet) }}</span></div>
+        </div>
+      </div>
+      <div class="wallet-right">
+        <div class="winfo">
+          <div class="winfo-label">Applications Possible</div>
+          <div class="winfo-val">{{ (user.wallet // 150)|int }}</div>
+        </div>
+        <div class="winfo">
+          <div class="winfo-label">Fee per Application</div>
+          <div class="winfo-val">₹150</div>
+        </div>
+        <div class="winfo">
+          <div class="winfo-label">Total Applied</div>
+          <div class="winfo-val">{{ stats.total }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Stats -->
-    {% set total    = applications|length %}
-    {% set pending  = applications|selectattr('status','equalto','Pending')|list|length %}
-    {% set approved = applications|selectattr('status','equalto','Approved')|list|length %}
-    {% set rejected = applications|selectattr('status','equalto','Rejected')|list|length %}
     <div class="stats-grid">
-      <div class="stat-card gold"   style="cursor:pointer;" onclick="setFilter('all')"><div class="stat-label">Total Applications</div><div class="stat-num">{{ total }}</div><div class="stat-sub">Click to show all</div></div>
-      <div class="stat-card orange" style="cursor:pointer;" onclick="setFilter('pending')"><div class="stat-label">Pending</div><div class="stat-num">{{ pending }}</div><div class="stat-sub">Click to filter</div></div>
-      <div class="stat-card green"  style="cursor:pointer;" onclick="setFilter('approved')"><div class="stat-label">Approved</div><div class="stat-num">{{ approved }}</div><div class="stat-sub">Click to filter</div></div>
-      <div class="stat-card red"    style="cursor:pointer;" onclick="setFilter('rejected')"><div class="stat-label">Rejected</div><div class="stat-num">{{ rejected }}</div><div class="stat-sub">Click to filter</div></div>
+      <div class="stat-card" onclick="filterApps('all')">
+        <div class="stat-bg yellow"></div>
+        <div class="stat-label">Total Applications</div>
+        <div class="stat-num">{{ stats.total }}</div>
+        <div class="stat-sub">Click to show all</div>
+      </div>
+      <div class="stat-card" onclick="filterApps('pending')">
+        <div class="stat-bg blue"></div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-num">{{ stats.pending }}</div>
+        <div class="stat-sub">Awaiting review</div>
+      </div>
+      <div class="stat-card" onclick="filterApps('approved')">
+        <div class="stat-bg green"></div>
+        <div class="stat-label">Approved</div>
+        <div class="stat-num">{{ stats.approved }}</div>
+        <div class="stat-sub">Successfully processed</div>
+      </div>
+      <div class="stat-card" onclick="filterApps('rejected')">
+        <div class="stat-bg red"></div>
+        <div class="stat-label">Rejected</div>
+        <div class="stat-num">{{ stats.rejected }}</div>
+        <div class="stat-sub">Needs attention</div>
+      </div>
     </div>
 
     <!-- Applications Table -->
-    <div class="card" style="margin-bottom:24px;">
-      <div class="card-header" style="flex-direction:column;align-items:stretch;gap:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <h3>Application History</h3>
-          <a href="{{ url_for('apply') }}" class="btn-apply"
-             {% if  < pan_cost %}style="opacity:0.5;pointer-events:none;" title="Insufficient user.wallet"{% endif %}>
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            New Application
-          </a>
-        </div>
-        <div class="toolbar">
-          <div class="search-box">
-            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <input type="text" id="searchInput" placeholder="Search by name, ID, PAN type..." oninput="applyFilters()">
-          </div>
-          <button class="filter-btn active" id="btn-all"        onclick="setFilter('all')">All</button>
-          <button class="filter-btn"        id="btn-pending"    onclick="setFilter('pending')">🟡 Pending</button>
-          <button class="filter-btn"        id="btn-processing" onclick="setFilter('processing')">🔵 Processing</button>
-          <button class="filter-btn"        id="btn-approved"   onclick="setFilter('approved')">🟢 Approved</button>
-          <button class="filter-btn"        id="btn-rejected"   onclick="setFilter('rejected')">🔴 Rejected</button>
-          <span class="result-count" id="resultCount"></span>
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">My Applications</span>
+        <div class="search-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Search applications..." oninput="filterApps()">
         </div>
       </div>
-
-      {% if applications %}
-      <table id="appTable">
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">🟡 Pending</button>
+        <button class="filter-btn" onclick="setFilter('processing',this)">🔵 Processing</button>
+        <button class="filter-btn" onclick="setFilter('approved',this)">🟢 Approved</button>
+        <button class="filter-btn" onclick="setFilter('rejected',this)">🔴 Rejected</button>
+        <span class="result-count" id="resultCount"></span>
+      </div>
+      {% if apps %}
+      <table>
         <thead>
-          <tr><th>App. ID</th><th>Name on PAN</th><th>Category</th><th>PAN Type</th><th>Submitted</th><th>Status</th><th>Receipt</th></tr>
+          <tr>
+            <th>App ID</th>
+            <th>Category</th>
+            <th>Name</th>
+            <th>PAN Type</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Receipt</th>
+          </tr>
         </thead>
-        <tbody>
-          {% for app in applications %}
-          <tr class="app-row"
-              data-status="{{ app.status.lower() }}"
-              data-search="{{ app.full_name|lower }} {{ app.id }} {{ app.pan_type|lower }} {{ app.app_category|lower }} {{ app.submitted_at }}">
+        <tbody id="appTableBody">
+          {% for app in apps %}
+          <tr class="app-row" data-status="{{ app.status|lower }}" data-search="{{ app.first_name }} {{ app.last_name }} {{ app.full_name }} {{ app.id }} {{ app.pan_type }} {{ app.app_category }}">
             <td><strong>#{{ app.id }}</strong></td>
-            <td>
-              <div style="font-weight:600;">{{ app.full_name }}</div>
-              {% if app.first_name or app.last_name %}<div style="font-size:0.75rem;color:#888;">{{ app.first_name }} {{ app.last_name }}</div>{% endif %}
-            </td>
-            <td>
-              <span style="font-size:0.78rem;padding:3px 9px;border-radius:20px;font-weight:600;background:{% if app.app_category=='New PAN' %}#eff6ff;color:#1d4ed8{% else %}#f5f0ff;color:#6d28d9{% endif %};">
-                {{ app.app_category or 'New PAN' }}
-              </span>
-            </td>
+            <td>{{ app.app_category or 'New PAN' }}</td>
+            <td>{{ app.full_name or ((app.first_name or '') + ' ' + (app.last_name or '')) }}</td>
             <td>{{ app.pan_type }}</td>
-            <td style="font-size:0.82rem;color:#888;">{{ app.submitted_at }}</td>
-            <td><span class="status-badge {{ app.status.lower() }}">{{ app.status }}</span></td>
+            <td>{{ app.created_at[:10] if app.created_at else '-' }}</td>
+            <td><span class="badge {{ app.status|lower }}">{{ app.status }}</span></td>
             <td>
               {% if app.receipt %}
-              <a href="{{ url_for('download_receipt', app_id=app.id) }}"
-                 style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:linear-gradient(135deg,var(--gold),#a8893a);color:var(--navy);font-weight:700;font-size:0.75rem;border-radius:8px;text-decoration:none;">
-                ⬇ Download
+              <a href="/download_receipt/{{ app.id }}" class="btn-download">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download
               </a>
-              {% else %}
-              <span style="font-size:0.75rem;color:#ccc;">—</span>
-              {% endif %}
+              {% else %}-{% endif %}
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
-      <div class="no-results" id="noResults">
-        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <p>No applications match your search.</p>
+      <div id="noResults" class="empty-state hidden">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>No matching applications found</p>
       </div>
       {% else %}
       <div class="empty-state">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>
-        <p>No applications yet. <a href="{{ url_for('apply') }}" style="color:var(--gold);">Apply now</a></p>
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        <p>No applications yet. <a href="/apply" style="color:#d4af37">Apply now</a></p>
       </div>
       {% endif %}
     </div>
 
-    <!-- Wallet Transactions -->
-    <div class="card">
-      <div class="card-header">
-        <h3>Wallet Transactions</h3>
-        <span style="font-size:0.8rem;color:#888;">Last 10 transactions</span>
+    <!-- Transactions -->
+    {% if transactions %}
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Wallet Transactions</span>
       </div>
-      {% if txns %}
-        {% for t in txns %}
-        <div class="txn-row">
-          <div class="txn-dot {{ t.txn_type }}">{{ '➕' if t.txn_type=='credit' else '➖' }}</div>
-          <div style="flex:1;">
-            <div class="txn-desc">{{ t.description }}</div>
-            <div class="txn-date">{{ t.created_at }}</div>
+      <div class="txn-list">
+        {% for txn in transactions %}
+        <div class="txn-item">
+          <div class="txn-left">
+            <div class="txn-icon {{ txn.type }}">
+              {% if txn.type == 'credit' %}
+              <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,5 19,12"/></svg>
+              {% else %}
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19,12 12,19 5,12"/></svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="txn-desc">{{ txn.description }}</div>
+              <div class="txn-date">{{ txn.created_at[:16] if txn.created_at else '' }}</div>
+            </div>
           </div>
-          <div class="txn-amt {{ t.txn_type }}">{{ '+' if t.txn_type=='credit' else '-' }}₹{{ "%.0f"|format(t.amount) }}</div>
+          <div class="txn-amount {{ txn.type }}">
+            {{ '+' if txn.type == 'credit' else '' }}₹{{ "%.2f"|format(txn.amount|abs) }}
+          </div>
         </div>
         {% endfor %}
-      {% else %}
-      <div class="empty-state" style="padding:32px;">
-        <p style="color:#aaa;font-size:0.88rem;">No transactions yet.</p>
       </div>
-      {% endif %}
     </div>
-  </main>
-  </div><!-- /flex wrapper -->
+    {% endif %}
+
+  </div>
 </div>
 
 <script>
+let currentFilter = 'all';
+
 function toggleDropdown() {
-  document.getElementById('userDropdown').classList.toggle('open');
+  document.getElementById('userDropdown').classList.toggle('show');
 }
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.topbar-right')) {
-    document.getElementById('userDropdown').classList.remove('open');
+  if (!e.target.closest('.user-menu')) {
+    document.getElementById('userDropdown').classList.remove('show');
   }
 });
 
-let activeFilter = 'all';
-function setFilter(s) {
-  activeFilter = s;
-  ['all','pending','processing','approved','rejected'].forEach(k => {
-    const b = document.getElementById('btn-'+k);
-    if (b) b.classList.toggle('active', k===s);
-  });
-  applyFilters();
+function setFilter(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterApps();
 }
-function applyFilters() {
-  const q    = document.getElementById('searchInput').value.toLowerCase().trim();
+
+function filterApps(status) {
+  if (status) { currentFilter = status; }
+  const search = (document.getElementById('searchInput').value || '').toLowerCase();
   const rows = document.querySelectorAll('.app-row');
-  let vis = 0;
-  rows.forEach(r => {
-    const show = (activeFilter==='all' || r.dataset.status===activeFilter) && (!q || r.dataset.search.includes(q));
-    r.style.display = show ? '' : 'none';
-    if (show) vis++;
+  let visible = 0;
+  rows.forEach(row => {
+    const matchStatus = currentFilter === 'all' || row.dataset.status === currentFilter;
+    const matchSearch = !search || row.dataset.search.toLowerCase().includes(search);
+    if (matchStatus && matchSearch) { row.classList.remove('hidden'); visible++; }
+    else { row.classList.add('hidden'); }
   });
-  const c = document.getElementById('resultCount');
-  if (c) c.textContent = (q || activeFilter!=='all') ? `${vis} of ${rows.length} shown` : `${rows.length} total`;
-  const nr = document.getElementById('noResults'), tbl = document.getElementById('appTable');
-  if (nr && tbl) { nr.style.display = vis===0?'block':'none'; tbl.style.display = vis===0?'none':''; }
+  const noResults = document.getElementById('noResults');
+  if (noResults) noResults.classList.toggle('hidden', visible > 0);
+  const rc = document.getElementById('resultCount');
+  if (rc) rc.textContent = visible + ' of ' + rows.length + ' shown';
 }
-window.addEventListener('DOMContentLoaded', () => applyFilters());
+
+filterApps();
 </script>
 </body>
 </html>
