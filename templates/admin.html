@@ -520,7 +520,7 @@ document.getElementById('detailModal').addEventListener('click', function(e) { i
 // ── Delete confirm ──
 function confirmDelete(uid, uname) {
   document.getElementById('confirmText').textContent = `Delete user "${uname}"? All their applications, wallet balance and data will be permanently removed.`;
-  document.getElementById('deleteForm').action = `/admin/user/delete/${uid}`;
+  document.getElementById('deleteForm').action = `/delete_user/${uid}`;
   document.getElementById('confirmModal').classList.add('open');
 }
 function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); }
