@@ -264,7 +264,7 @@
 
       <div class="stats-grid" style="margin-bottom:24px;">
         <div class="stat-card gold"><div class="stat-label">Total Users</div><div class="stat-num">{{ users|length }}</div><div class="stat-sub">Registered</div></div>
-        <div class="stat-card green"><div class="stat-label">Total Wallet</div><div class="stat-num">₹{{ "%.0f"|format(users|sum(attribute='balance')) }}</div><div class="stat-sub">All users combined</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Wallet</div><div class="stat-num">₹{{ "%.0f"|format(users|sum(attribute='wallet')) }}</div><div class="stat-sub">All users combined</div></div>
         <div class="stat-card orange"><div class="stat-label">Per Application</div><div class="stat-num">₹{{ pan_cost }}</div><div class="stat-sub">Fixed charge</div></div>
       </div>
 
