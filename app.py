@@ -248,8 +248,8 @@ def admin():
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''SELECT a.*, u.username FROM applications a
-                   JOIN users u ON a.user_id = u.id
-                   ORDER BY a.id DESC''')
+                   LEFT JOIN users u ON a.user_id = u.id
+                   ORDER BY a.created_at DESC''')
     apps = cur.fetchall()
     cur.execute('''SELECT u.*, COUNT(a.id) as app_count
                    FROM users u LEFT JOIN applications a ON u.id = a.user_id
@@ -269,7 +269,7 @@ def admin():
         'approved': sum(1 for a in apps if a['status'] == 'Approved'),
         'rejected': sum(1 for a in apps if a['status'] == 'Rejected'),
     }
-    return render_template('admin.html', apps=apps, users=users, transactions=transactions, stats=stats, pan_cost=150)
+    return render_template('admin.html', apps=apps, users=users, transactions=transactions, stats=stats)
 
 @app.route('/update_status/<int:app_id>', methods=['POST'])
 def update_status(app_id):
