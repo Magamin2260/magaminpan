@@ -362,5 +362,21 @@ def admin_detail(app_id):
         if isinstance(v, datetime.datetime):
             d[k] = v.strftime('%Y-%m-%d %H:%M')
     return jsonify(d)
+@app.route('/admin/change-credentials', methods=['POST'])
+def change_credentials():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    new_username = request.form.get('new_username')
+    new_password = request.form.get('new_password')
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET username=%s, password=%s WHERE role='admin'",
+                (new_username, new_password))
+    conn.commit()
+    cur.close()
+    conn.close()
+    session['username'] = new_username
+    flash('Admin credentials updated successfully!')
+    return redirect(url_for('admin'))
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
