@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
-import sqlite3
 import os
+import psycopg2
+import psycopg2.extras
 from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'database.db')
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'),
@@ -19,15 +20,15 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
 def init_db():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     conn = get_db()
-    conn.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         email TEXT,
@@ -36,8 +37,8 @@ def init_db():
         wallet REAL DEFAULT 0.0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
-    conn.execute('''CREATE TABLE IF NOT EXISTS applications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cur.execute('''CREATE TABLE IF NOT EXISTS applications (
+        id SERIAL PRIMARY KEY,
         user_id INTEGER,
         app_category TEXT,
         last_name TEXT,
@@ -73,8 +74,8 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )''')
-    conn.execute('''CREATE TABLE IF NOT EXISTS wallet_transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cur.execute('''CREATE TABLE IF NOT EXISTS wallet_transactions (
+        id SERIAL PRIMARY KEY,
         user_id INTEGER,
         amount REAL,
         type TEXT,
@@ -82,54 +83,16 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )''')
-    # Create default admin
     try:
-        conn.execute("INSERT INTO users (username, password, role, wallet) VALUES (?, ?, ?, ?)",
+        cur.execute("INSERT INTO users (username, password, role, wallet) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING",
                      ('admin', 'admin123', 'admin', 0))
     except:
         pass
     conn.commit()
+    cur.close()
     conn.close()
 
-# Auto-migrate missing columns
-def migrate_db():
-    conn = get_db()
-    existing = [row[1] for row in conn.execute("PRAGMA table_info(applications)").fetchall()]
-    new_cols = {
-        'receipt': 'TEXT',
-        'correction_name': "TEXT DEFAULT 'No Change'",
-        'correction_dob': "TEXT DEFAULT 'No Change'",
-        'correction_father': "TEXT DEFAULT 'No Change'",
-        'correction_gender': "TEXT DEFAULT 'No Change'",
-        'correction_address': "TEXT DEFAULT 'No Change'",
-        'correction_photo': "TEXT DEFAULT 'No Change'",
-        'last_name': 'TEXT',
-        'first_name': 'TEXT',
-        'middle_name': 'TEXT',
-        'father_last_name': 'TEXT',
-        'father_first_name': 'TEXT',
-        'father_middle_name': 'TEXT',
-        'app_category': 'TEXT',
-    }
-    for col, coltype in new_cols.items():
-        if col not in existing:
-            try:
-                conn.execute(f"ALTER TABLE applications ADD COLUMN {col} {coltype}")
-            except:
-                pass
-    # wallet column for users
-    user_cols = [row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()]
-    if 'wallet' not in user_cols:
-        try:
-            conn.execute("ALTER TABLE users ADD COLUMN wallet REAL DEFAULT 0.0")
-        except:
-            pass
-    conn.commit()
-    conn.close()
-
-# Initialize on startup
 init_db()
-migrate_db()
 
 @app.route('/')
 def index():
@@ -145,7 +108,10 @@ def login():
         u = request.form['username']
         p = request.form['password']
         conn = get_db()
-        user = conn.execute('SELECT * FROM users WHERE username=? AND password=?', (u, p)).fetchone()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users WHERE username=%s AND password=%s', (u, p))
+        user = cur.fetchone()
+        cur.close()
         conn.close()
         if user:
             session['user_id'] = user['id']
@@ -166,8 +132,10 @@ def register():
         m = request.form.get('mobile', '')
         try:
             conn = get_db()
-            conn.execute('INSERT INTO users (username, password, email, mobile) VALUES (?,?,?,?)', (u, p, e, m))
+            cur = conn.cursor()
+            cur.execute('INSERT INTO users (username, password, email, mobile) VALUES (%s,%s,%s,%s)', (u, p, e, m))
             conn.commit()
+            cur.close()
             conn.close()
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
@@ -185,9 +153,14 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     conn = get_db()
-    apps = conn.execute('SELECT * FROM applications WHERE user_id=? ORDER BY created_at DESC', (session['user_id'],)).fetchall()
-    user = conn.execute('SELECT * FROM users WHERE id=?', (session['user_id'],)).fetchone()
-    transactions = conn.execute('SELECT * FROM wallet_transactions WHERE user_id=? ORDER BY created_at DESC LIMIT 10', (session['user_id'],)).fetchall()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM applications WHERE user_id=%s ORDER BY created_at DESC', (session['user_id'],))
+    apps = cur.fetchall()
+    cur.execute('SELECT * FROM users WHERE id=%s', (session['user_id'],))
+    user = cur.fetchone()
+    cur.execute('SELECT * FROM wallet_transactions WHERE user_id=%s ORDER BY created_at DESC LIMIT 10', (session['user_id'],))
+    transactions = cur.fetchall()
+    cur.close()
     conn.close()
     stats = {
         'total': len(apps),
@@ -203,10 +176,13 @@ def apply():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE id=?', (session['user_id'],)).fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users WHERE id=%s', (session['user_id'],))
+    user = cur.fetchone()
     if request.method == 'POST':
         if user['wallet'] < 150:
             flash('Insufficient wallet balance. Please contact admin to add funds.', 'error')
+            cur.close()
             conn.close()
             return redirect(url_for('apply'))
 
@@ -227,14 +203,14 @@ def apply():
         father_middle = request.form.get('father_middle_name', '').upper()
         father_name = f"{father_first} {father_middle} {father_last}".strip()
 
-        conn.execute('''INSERT INTO applications
+        cur.execute('''INSERT INTO applications
             (user_id, app_category, last_name, first_name, middle_name, full_name,
              father_last_name, father_first_name, father_middle_name, father_name,
              dob, gender, mobile, email, aadhaar, pan_type,
              address, city, state, pincode, photo, signature, aadhaar_doc, additional_doc,
              correction_name, correction_dob, correction_father, correction_gender,
              correction_address, correction_photo)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
             (session['user_id'],
              request.form.get('app_category', 'New PAN'),
              last_name, first_name, middle_name, full_name,
@@ -253,14 +229,15 @@ def apply():
              request.form.get('correction_address', 'No Change'),
              request.form.get('correction_photo', 'No Change')))
 
-        # Deduct wallet
-        conn.execute('UPDATE users SET wallet = wallet - 150 WHERE id=?', (session['user_id'],))
-        conn.execute('INSERT INTO wallet_transactions (user_id, amount, type, description) VALUES (?,?,?,?)',
+        cur.execute('UPDATE users SET wallet = wallet - 150 WHERE id=%s', (session['user_id'],))
+        cur.execute('INSERT INTO wallet_transactions (user_id, amount, type, description) VALUES (%s,%s,%s,%s)',
                      (session['user_id'], -150, 'debit', 'PAN Application Fee'))
         conn.commit()
+        cur.close()
         conn.close()
         flash('Application submitted successfully! ₹150 deducted from wallet.', 'success')
         return redirect(url_for('dashboard'))
+    cur.close()
     conn.close()
     return render_template('form.html', user=user)
 
@@ -269,16 +246,21 @@ def admin():
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
     conn = get_db()
-    apps = conn.execute('''SELECT a.*, u.username FROM applications a
-                           JOIN users u ON a.user_id = u.id
-                           ORDER BY a.created_at DESC''').fetchall()
-    users = conn.execute('''SELECT u.*, COUNT(a.id) as app_count
-                            FROM users u LEFT JOIN applications a ON u.id = a.user_id
-                            WHERE u.role != 'admin'
-                            GROUP BY u.id ORDER BY u.created_at DESC''').fetchall()
-    transactions = conn.execute('''SELECT t.*, u.username FROM wallet_transactions t
-                                   JOIN users u ON t.user_id = u.id
-                                   ORDER BY t.created_at DESC LIMIT 50''').fetchall()
+    cur = conn.cursor()
+    cur.execute('''SELECT a.*, u.username FROM applications a
+                   JOIN users u ON a.user_id = u.id
+                   ORDER BY a.created_at DESC''')
+    apps = cur.fetchall()
+    cur.execute('''SELECT u.*, COUNT(a.id) as app_count
+                   FROM users u LEFT JOIN applications a ON u.id = a.user_id
+                   WHERE u.role != 'admin'
+                   GROUP BY u.id ORDER BY u.created_at DESC''')
+    users = cur.fetchall()
+    cur.execute('''SELECT t.*, u.username FROM wallet_transactions t
+                   JOIN users u ON t.user_id = u.id
+                   ORDER BY t.created_at DESC LIMIT 50''')
+    transactions = cur.fetchall()
+    cur.close()
     conn.close()
     stats = {
         'total': len(apps),
@@ -295,6 +277,7 @@ def update_status(app_id):
         return redirect(url_for('login'))
     status = request.form.get('status')
     conn = get_db()
+    cur = conn.cursor()
     receipt_filename = None
     if status == 'Processing' and 'receipt' in request.files:
         f = request.files['receipt']
@@ -303,10 +286,11 @@ def update_status(app_id):
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
             receipt_filename = fn
     if receipt_filename:
-        conn.execute('UPDATE applications SET status=?, receipt=? WHERE id=?', (status, receipt_filename, app_id))
+        cur.execute('UPDATE applications SET status=%s, receipt=%s WHERE id=%s', (status, receipt_filename, app_id))
     else:
-        conn.execute('UPDATE applications SET status=? WHERE id=?', (status, app_id))
+        cur.execute('UPDATE applications SET status=%s WHERE id=%s', (status, app_id))
     conn.commit()
+    cur.close()
     conn.close()
     flash(f'Application #{app_id} status updated to {status}', 'success')
     return redirect(url_for('admin'))
@@ -318,10 +302,12 @@ def add_wallet(user_id):
     amount = float(request.form.get('amount', 0))
     if amount > 0:
         conn = get_db()
-        conn.execute('UPDATE users SET wallet = wallet + ? WHERE id=?', (amount, user_id))
-        conn.execute('INSERT INTO wallet_transactions (user_id, amount, type, description) VALUES (?,?,?,?)',
+        cur = conn.cursor()
+        cur.execute('UPDATE users SET wallet = wallet + %s WHERE id=%s', (amount, user_id))
+        cur.execute('INSERT INTO wallet_transactions (user_id, amount, type, description) VALUES (%s,%s,%s,%s)',
                      (user_id, amount, 'credit', f'Admin added ₹{amount}'))
         conn.commit()
+        cur.close()
         conn.close()
         flash(f'₹{amount} added to wallet successfully', 'success')
     return redirect(url_for('admin') + '#wallet')
@@ -331,10 +317,12 @@ def delete_user(user_id):
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
     conn = get_db()
-    conn.execute('DELETE FROM wallet_transactions WHERE user_id=?', (user_id,))
-    conn.execute('DELETE FROM applications WHERE user_id=?', (user_id,))
-    conn.execute('DELETE FROM users WHERE id=?', (user_id,))
+    cur = conn.cursor()
+    cur.execute('DELETE FROM wallet_transactions WHERE user_id=%s', (user_id,))
+    cur.execute('DELETE FROM applications WHERE user_id=%s', (user_id,))
+    cur.execute('DELETE FROM users WHERE id=%s', (user_id,))
     conn.commit()
+    cur.close()
     conn.close()
     flash('User deleted successfully', 'success')
     return redirect(url_for('admin') + '#wallet')
@@ -344,7 +332,10 @@ def download_receipt(app_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     conn = get_db()
-    app_row = conn.execute('SELECT * FROM applications WHERE id=?', (app_id,)).fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM applications WHERE id=%s', (app_id,))
+    app_row = cur.fetchone()
+    cur.close()
     conn.close()
     if app_row and app_row['receipt']:
         return send_from_directory(app.config['UPLOAD_FOLDER'], app_row['receipt'],
