@@ -226,14 +226,14 @@
       <div class="wallet-left">
         <div class="wallet-icon">💳</div>
         <div>
-          <div class="wallet-label">Wallet Balance</div>
-          <div class="wallet-amount">₹{{ "%.2f"|format(balance) }}</div>
+          <div class="wallet-label">Wallet </div>
+          <div class="wallet-amount">₹{{ "%.2f"|format() }}</div>
           <div class="wallet-sub">₹{{ pan_cost }} required per PAN application</div>
         </div>
       </div>
       <div class="wallet-info">
         <div class="winfo-item">
-          <div class="winfo-val">{{ (balance // pan_cost)|int }}</div>
+          <div class="winfo-val">{{ ( // pan_cost)|int }}</div>
           <div class="winfo-key">Applications possible</div>
         </div>
         <div style="width:1px; height:36px; background:rgba(255,255,255,0.1);"></div>
@@ -244,9 +244,9 @@
       </div>
     </div>
 
-    {% if balance < pan_cost %}
+    {% if  < pan_cost %}
     <div class="insufficient-warning">
-      ⚠️ Insufficient balance to apply. You need ₹{{ pan_cost }}. Please contact admin to top up your wallet.
+      ⚠️ Insufficient  to apply. You need ₹{{ pan_cost }}. Please contact admin to top up your wallet.
     </div>
     {% endif %}
 
@@ -268,7 +268,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <h3>Application History</h3>
           <a href="{{ url_for('apply') }}" class="btn-apply"
-             {% if balance < pan_cost %}style="opacity:0.5;pointer-events:none;" title="Insufficient balance"{% endif %}>
+             {% if  < pan_cost %}style="opacity:0.5;pointer-events:none;" title="Insufficient user.wallet"{% endif %}>
             <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             New Application
           </a>
