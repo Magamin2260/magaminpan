@@ -2,556 +2,426 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Apply for PAN Card</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Upload box */
-.upload-box {
-  border: 2px dashed #ddd; border-radius: 12px; padding: 20px;
-  text-align: center; cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  position: relative; background: #fafafa;
-}
-.upload-box:hover { border-color: var(--gold); background: #fffdf5; }
-.upload-box input[type=file] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
-.upload-box .up-icon { font-size: 2rem; margin-bottom: 6px; }
-.upload-box .up-label { font-size: 0.82rem; color: #888; }
-.upload-box .up-types { font-size: 0.72rem; color: #bbb; margin-top: 4px; }
-.upload-box.has-file { border-color: #2ecc71; background: #f0fff6; }
-.upload-box .file-name { font-size: 0.8rem; color: #2ecc71; font-weight: 600; margin-top: 6px; display:none; }
-
-/* Category tabs */
-.category-tabs { display: flex; gap: 12px; }
-.cat-tab {
-  flex: 1; padding: 16px; border: 2px solid #ddd; border-radius: 12px;
-  background: #fff; cursor: pointer; text-align: center; transition: all 0.2s;
-}
-.cat-tab input[type=radio] { display: none; }
-.cat-tab.active { border-color: var(--gold); background: #fffdf0; }
-.cat-icon { font-size: 1.6rem; margin-bottom: 6px; }
-.cat-name { font-weight: 700; font-size: 0.9rem; color: var(--navy); }
-.cat-desc { font-size: 0.75rem; color: #888; margin-top: 3px; }
-
-/* Show/hide */
-.doc-section { display: none; }
-.doc-section.visible { display: block; }
-
-/* Correction row — field label + select box inline */
-.corr-table { width: 100%; border-collapse: collapse; }
-.corr-table tr { border-bottom: 1px solid #f0f0f0; }
-.corr-table tr:last-child { border-bottom: none; }
-.corr-table td { padding: 12px 8px; vertical-align: middle; }
-.corr-field-icon { font-size: 1.2rem; width: 36px; text-align: center; }
-.corr-field-name { font-weight: 600; font-size: 0.9rem; color: var(--navy); }
-.corr-field-desc { font-size: 0.75rem; color: #888; margin-top: 2px; }
-.corr-status-select {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1.5px solid #ddd;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--navy);
-  background: #f9fafb;
-  cursor: pointer;
-  outline: none;
-  min-width: 160px;
-  transition: border-color 0.2s;
-}
-.corr-status-select:focus { border-color: var(--gold); }
-.corr-status-select.correction { border-color: var(--gold); background: #fffdf0; color: #856404; }
-.corr-status-select.no-change { border-color: #e0e0e0; color: #aaa; }
-
-.required-tag {
-  display: inline-block; background: #fff3cd; color: #856404;
-  font-size: 0.68rem; font-weight: 600; padding: 2px 8px;
-  border-radius: 20px; margin-left: 6px; vertical-align: middle;
-}
-.optional-tag {
-  display: inline-block; background: #e9f9f0; color: #166534;
-  font-size: 0.68rem; font-weight: 600; padding: 2px 8px;
-  border-radius: 20px; margin-left: 6px; vertical-align: middle;
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;min-height:100vh;display:flex}
+.sidebar{width:220px;background:linear-gradient(160deg,#0a1628,#1a2f5e);min-height:100vh;display:flex;flex-direction:column;padding:0;position:fixed;top:0;left:0;z-index:100}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-logo .logo-icon{width:40px;height:40px;background:rgba(212,175,55,0.15);border:1.5px solid #d4af37;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.sidebar-logo .logo-icon svg{width:20px;height:20px;fill:#d4af37}
+.sidebar-logo h2{font-family:'Playfair Display',serif;font-size:1rem;color:white}
+.sidebar-logo h2 span{color:#d4af37}
+.sidebar-logo p{font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase}
+.sidebar-nav{padding:20px 12px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:rgba(255,255,255,0.6);font-size:0.85rem;text-decoration:none;transition:all 0.2s;margin-bottom:4px}
+.nav-item:hover,.nav-item.active{background:rgba(212,175,55,0.15);color:#d4af37}
+.nav-item svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+.main-content{margin-left:220px;flex:1;display:flex;flex-direction:column}
+.topbar{background:white;padding:0 30px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8e4dc;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:1rem;font-weight:600;color:#1a1a2e}
+.user-menu{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.85rem;color:#444;transition:background 0.2s}
+.user-btn:hover{background:#f5f3ee}
+.user-avatar{width:32px;height:32px;background:#d4af37;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:0.85rem}
+.dropdown{position:absolute;right:0;top:calc(100% + 8px);background:white;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);min-width:200px;padding:8px;display:none;z-index:200}
+.dropdown.show{display:block}
+.dropdown-header{padding:10px 12px 8px;border-bottom:1px solid #f0ede8;margin-bottom:4px}
+.dropdown-header .d-name{font-weight:600;font-size:0.9rem;color:#1a1a2e}
+.dropdown-header .d-role{font-size:0.75rem;color:#888}
+.dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#444;font-size:0.85rem;transition:background 0.2s}
+.dropdown-item:hover{background:#f5f3ee}
+.dropdown-item svg{width:14px;height:14px;fill:currentColor}
+.dropdown-divider{height:1px;background:#f0ede8;margin:4px 0}
+.dropdown-item.logout{color:#dc2626}
+.page-content{padding:30px;flex:1;max-width:900px;margin:0 auto;width:100%}
+.page-header{margin-bottom:24px}
+.page-header h1{font-family:'Playfair Display',serif;font-size:1.8rem;color:#1a1a2e}
+.page-header p{color:#888;font-size:0.9rem;margin-top:4px}
+.wallet-bar{display:flex;align-items:center;justify-content:space-between;border-radius:12px;padding:14px 20px;margin-bottom:24px;}
+.wallet-bar.ok{background:#e9f9f0;border:1px solid #a3e9c0;}
+.wallet-bar.low{background:#fff3cd;border:1px solid #f0c040;}
+.wallet-bar-left{display:flex;align-items:center;gap:10px;font-size:0.9rem;font-weight:500}
+.wallet-bar.ok .wallet-bar-left{color:#1a7a4a}
+.wallet-bar.low .wallet-bar-left{color:#856404}
+.wallet-bar-right{font-size:0.85rem;color:#888}
+.card{background:white;border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+.card-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:#1a1a2e;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #f0ede8}
+.category-tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px}
+.cat-tab{border:2px solid #e0ddd8;border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center}
+.cat-tab:hover{border-color:#d4af37}
+.cat-tab.active{border-color:#d4af37;background:#fdf9f0}
+.cat-tab input{display:none}
+.cat-tab-icon{font-size:1.5rem;margin-bottom:6px}
+.cat-tab-title{font-weight:600;font-size:0.9rem;color:#1a1a2e}
+.cat-tab-desc{font-size:0.75rem;color:#888;margin-top:2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:0.75rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px}
+label .req{color:#dc2626;margin-left:2px}
+input[type=text],input[type=email],input[type=date],select,textarea{padding:11px 14px;border:1.5px solid #e0ddd8;border-radius:10px;font-size:0.9rem;font-family:'Inter',sans-serif;color:#1a1a2e;background:white;transition:border 0.2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#d4af37;box-shadow:0 0 0 3px rgba(212,175,55,0.1)}
+input[style*="text-transform"]{text-transform:uppercase}
+.correction-table{width:100%;border-collapse:collapse;margin-top:4px}
+.correction-table th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#888;padding:8px 12px;text-align:left;background:#faf9f7;border-bottom:1px solid #f0ede8}
+.correction-table td{padding:10px 12px;border-bottom:1px solid #f9f8f6;font-size:0.88rem;color:#444}
+.correction-table select{padding:6px 10px;font-size:0.82rem;border:1.5px solid #e0ddd8;border-radius:8px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.2s}
+.correction-table select.correction{border-color:#d4af37;background:#fdf9f0;color:#b8962e;font-weight:600}
+.upload-section{display:none}
+.upload-section.show{display:block}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+.upload-box{border:2px dashed #e0ddd8;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.upload-box:hover{border-color:#d4af37;background:#fdf9f0}
+.upload-box.has-file{border-color:#22c55e;background:#f0fdf4}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:1.5rem;margin-bottom:6px}
+.upload-label{font-size:0.82rem;font-weight:600;color:#555}
+.upload-hint{font-size:0.72rem;color:#aaa;margin-top:2px}
+.upload-filename{font-size:0.78rem;color:#22c55e;font-weight:600;margin-top:4px}
+.submit-area{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.btn-submit{padding:14px 40px;background:#d4af37;color:white;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
+.btn-submit:hover{background:#b8962e;transform:translateY(-1px)}
+.btn-submit:disabled{background:#ccc;cursor:not-allowed;transform:none}
+.btn-cancel{padding:14px 24px;background:white;color:#666;border:1.5px solid #e0ddd8;border-radius:12px;font-size:0.9rem;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;display:inline-flex;align-items:center}
+.fee-note{font-size:0.82rem;color:#888}
+.flash{padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:0.88rem}
+.flash.error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.flash.success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+@media(max-width:768px){.sidebar{display:none}.main-content{margin-left:0}.form-grid{grid-template-columns:1fr}.upload-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <div class="logo-name">PAN <span>Portal</span></div>
-      <div class="logo-sub">Income Tax Dept.</div>
-    </div>
-    <nav>
-      <a href="{{ url_for('dashboard') }}" class="nav-item">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-        Dashboard
-      </a>
-      <a href="{{ url_for('apply') }}" class="nav-item active">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/></svg>
-        New Application
-      </a>
-    </nav>
-    <div class="sidebar-footer" style="display:none;"></div>
-  </aside>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <h2>PAN <span>Portal</span></h2>
+    <p>Application System</p>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Dashboard
+    </a>
+    <a href="/apply" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      New Application
+    </a>
+  </nav>
+</div>
 
-  <div style="flex:1;display:flex;flex-direction:column;min-height:100vh;">
-  <!-- Top Navbar -->
+<div class="main-content">
   <div class="topbar">
-    <div class="topbar-title">PAN Card Portal</div>
-    <div class="topbar-right">
-      <div class="user-menu-btn" onclick="toggleDropdown()">
-        <div class="user-menu-avatar" style="background:var(--navy);color:var(--gold);">{{ session.username[0].upper() }}</div>
-        <span class="user-menu-name">{{ session.username }}</span>
-        <span class="user-menu-caret">▼</span>
-      </div>
-      <div class="user-dropdown" id="userDropdown">
+    <span class="topbar-title">PAN Card Portal</span>
+    <div class="user-menu">
+      <button class="user-btn" onclick="toggleDropdown()">
+        <div class="user-avatar">{{ session.username[0].upper() }}</div>
+        {{ session.username }}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+      </button>
+      <div class="dropdown" id="userDropdown">
         <div class="dropdown-header">
-          <div class="dh-name">{{ session.username }}</div>
-          <div class="dh-role">Applicant</div>
+          <div class="d-name">{{ session.username }}</div>
+          <div class="d-role">Applicant</div>
         </div>
-        <a href="{{ url_for('dashboard') }}" class="dropdown-item">🏠 Dashboard</a>
-        <a href="{{ url_for('apply') }}" class="dropdown-item">📄 New Application</a>
-        <a href="{{ url_for('logout') }}" class="dropdown-item danger">🚪 Logout</a>
+        <a href="/dashboard" class="dropdown-item"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Dashboard</a>
+        <a href="/apply" class="dropdown-item"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>New Application</a>
+        <div class="dropdown-divider"></div>
+        <a href="/logout" class="dropdown-item logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
       </div>
     </div>
   </div>
 
-  <main class="main-content">
+  <div class="page-content">
     <div class="page-header">
-      <h1>PAN Application</h1>
-      <p>Fill in all details carefully. Upload clear scanned copies of documents.</p>
+      <h1>New Application</h1>
+      <p>Fill in the details below to apply for your PAN Card</p>
     </div>
 
-    <!-- Wallet status bar -->
-    <div style="display:flex; align-items:center; justify-content:space-between; background:{% if balance >= pan_cost %}#e9f9f0; border:1px solid #a3e9c0;{% else %}#fff3cd; border:1px solid #f0c040;{% endif %} border-radius:12px; padding:14px 20px; margin-bottom:24px;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-size:1.4rem;">💳</span>
-        <div>
-          <div style="font-weight:700; font-size:0.9rem; color:var(--navy);">Wallet Balance: ₹{{ "%.2f"|format(balance) }}</div>
-          <div style="font-size:0.75rem; color:#666;">₹{{ pan_cost }} will be deducted on submission</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+
+    <!-- Wallet Bar -->
+    <div class="wallet-bar {% if user.wallet >= 150 %}ok{% else %}low{% endif %}">
+      <div class="wallet-bar-left">
+        {% if user.wallet >= 150 %}
+        ✅ Wallet Balance: ₹{{ "%.2f"|format(user.wallet) }} — Ready to apply
+        {% else %}
+        ⚠️ Wallet Balance: ₹{{ "%.2f"|format(user.wallet) }} — Insufficient (₹150 required)
+        {% endif %}
+      </div>
+      <div class="wallet-bar-right">Fee: ₹150 per application</div>
+    </div>
+
+    <form method="POST" action="/apply" enctype="multipart/form-data">
+
+      <!-- Category -->
+      <div class="card">
+        <div class="card-title">Application Category</div>
+        <div class="category-tabs">
+          <label class="cat-tab active" id="tab-new" onclick="switchCategory('new')">
+            <input type="radio" name="app_category" value="New PAN" checked>
+            <div class="cat-tab-icon">🆕</div>
+            <div class="cat-tab-title">New PAN</div>
+            <div class="cat-tab-desc">Apply for a fresh PAN card</div>
+          </label>
+          <label class="cat-tab" id="tab-correction" onclick="switchCategory('correction')">
+            <input type="radio" name="app_category" value="Correction PAN">
+            <div class="cat-tab-icon">✏️</div>
+            <div class="cat-tab-title">Correction / Change</div>
+            <div class="cat-tab-desc">Update details on existing PAN</div>
+          </label>
         </div>
       </div>
-      {% if balance >= pan_cost %}
-      <span style="background:#2ecc71; color:#fff; font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:20px;">✓ Sufficient Balance</span>
-      {% else %}
-      <span style="background:#e74c3c; color:#fff; font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:20px;">⚠ Insufficient — Need ₹{{ pan_cost - balance | int }}</span>
-      {% endif %}
-    </div>
 
-    <div class="form-container">
-      <form method="POST" action="{{ url_for('apply') }}" enctype="multipart/form-data">
+      <!-- Correction Fields -->
+      <div class="card" id="correction-card" style="display:none">
+        <div class="card-title">Fields to Correct</div>
+        <table class="correction-table">
+          <thead><tr><th>Field</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>👤 Name</td><td><select name="correction_name" onchange="this.className=this.value=='Correction'?'correction':''"><option>No Change</option><option>Correction</option></select></td></tr>
+            <tr><td>📅 Date of Birth</td><td><select name="correction_dob" onchange="this.className=this.value=='Correction'?'correction':''"><option>No Change</option><option>Correction</option></select></td></tr>
+            <tr><td>👨‍👦 Father's Name</td><td><select name="correction_father" onchange="this.className=this.value=='Correction'?'correction':''"><option>No Change</option><option>Correction</option></select></td></tr>
+            <tr><td>⚧ Gender</td><td><select name="correction_gender" onchange="this.className=this.value=='Correction'?'correction':''"><option>No Change</option><option>Correction</option></select></td></tr>
+            <tr><td>🏠 Address</td><td><select name="correction_address" onchange="this.className=this.value=='Correction'?'correction':''"><option>No Change</option><option>Correction</option></select></td></tr>
+            <tr><td>📷 Photo / Signature</td><td><select name="correction_photo" onchange="this.className=this.value=='Correction'?'correction':''"><option>No Change</option><option>Correction</option></select></td></tr>
+          </tbody>
+        </table>
+      </div>
 
-        <!-- ── Application Category ── -->
-        <div class="form-card">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
-            </div>
-            <div><h4>Application Category</h4><p>Select the type of PAN application</p></div>
+      <!-- Personal Info -->
+      <div class="card">
+        <div class="card-title">Personal Information</div>
+        <div class="form-grid three" style="margin-bottom:16px">
+          <div class="form-group">
+            <label>Last Name / Surname <span class="req">*</span></label>
+            <input type="text" name="last_name" required placeholder="SHARMA" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
           </div>
-          <div class="form-card-body">
-            <div class="category-tabs">
-              <label class="cat-tab active" id="tab-new">
-                <input type="radio" name="app_category" value="New PAN" checked onchange="switchCategory('new')">
-                <div class="cat-icon">🪪</div>
-                <div class="cat-name">New PAN</div>
-                <div class="cat-desc">Apply for a fresh PAN card</div>
-              </label>
-              <label class="cat-tab" id="tab-correction">
-                <input type="radio" name="app_category" value="Correction PAN" onchange="switchCategory('correction')">
-                <div class="cat-icon">✏️</div>
-                <div class="cat-name">Correction / Change</div>
-                <div class="cat-desc">Update details on existing PAN</div>
-              </label>
+          <div class="form-group">
+            <label>First Name <span class="req">*</span></label>
+            <input type="text" name="first_name" required placeholder="RAJESH" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-group">
+            <label>Middle Name</label>
+            <input type="text" name="middle_name" placeholder="KUMAR" oninput="this.value=this.value.toUpperCase()">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom:16px">
+          <div class="form-group full">
+            <label>Name to Print on PAN Card <span class="req">*</span></label>
+            <input type="text" name="full_name" required placeholder="RAJESH KUMAR SHARMA" oninput="this.value=this.value.toUpperCase()">
+          </div>
+        </div>
+        <div class="form-grid three" style="margin-bottom:16px">
+          <div class="form-group">
+            <label>Father's Last Name <span class="req">*</span></label>
+            <input type="text" name="father_last_name" required placeholder="SHARMA" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-group">
+            <label>Father's First Name <span class="req">*</span></label>
+            <input type="text" name="father_first_name" required placeholder="RAMESH" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-group">
+            <label>Father's Middle Name</label>
+            <input type="text" name="father_middle_name" placeholder="LAL" oninput="this.value=this.value.toUpperCase()">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date of Birth <span class="req">*</span></label>
+            <input type="date" name="dob" required>
+          </div>
+          <div class="form-group">
+            <label>Gender <span class="req">*</span></label>
+            <select name="gender" required>
+              <option value="">Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Transgender</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="card">
+        <div class="card-title">Contact Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Mobile Number <span class="req">*</span></label>
+            <input type="text" name="mobile" required placeholder="9876543210" maxlength="10">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>Aadhaar Number <span class="req">*</span></label>
+            <input type="text" name="aadhaar" required placeholder="1234 5678 9012" maxlength="14">
+          </div>
+          <div class="form-group">
+            <label>PAN Card Type <span class="req">*</span></label>
+            <select name="pan_type" required>
+              <option value="">Select Type</option>
+              <option>Individual</option>
+              <option>HUF</option>
+              <option>Company</option>
+              <option>Trust</option>
+              <option>Partnership</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="card">
+        <div class="card-title">Address</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Street Address <span class="req">*</span></label>
+            <input type="text" name="address" required placeholder="House No, Street, Area">
+          </div>
+          <div class="form-group">
+            <label>City <span class="req">*</span></label>
+            <input type="text" name="city" required placeholder="City">
+          </div>
+          <div class="form-group">
+            <label>State <span class="req">*</span></label>
+            <select name="state" required>
+              <option value="">Select State</option>
+              <option>Tamil Nadu</option><option>Kerala</option><option>Karnataka</option>
+              <option>Andhra Pradesh</option><option>Telangana</option><option>Maharashtra</option>
+              <option>Delhi</option><option>Gujarat</option><option>Rajasthan</option>
+              <option>Uttar Pradesh</option><option>West Bengal</option><option>Bihar</option>
+              <option>Madhya Pradesh</option><option>Punjab</option><option>Haryana</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>PIN Code <span class="req">*</span></label>
+            <input type="text" name="pincode" required placeholder="600001" maxlength="6">
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="card">
+        <div class="card-title">Document Upload</div>
+
+        <!-- New PAN uploads -->
+        <div class="upload-section show" id="uploads-new">
+          <div class="upload-grid">
+            <div class="upload-box" id="box-photo" onclick="triggerUpload('photo')">
+              <input type="file" name="photo" id="photo" accept="image/*" onchange="fileSelected(this,'box-photo')">
+              <div class="upload-icon">📷</div>
+              <div class="upload-label">Passport Photo <span style="color:#dc2626">*</span></div>
+              <div class="upload-hint">JPG/PNG, max 2MB</div>
+              <div class="upload-filename" id="name-photo"></div>
+            </div>
+            <div class="upload-box" id="box-signature" onclick="triggerUpload('signature')">
+              <input type="file" name="signature" id="signature" accept="image/*" onchange="fileSelected(this,'box-signature')">
+              <div class="upload-icon">✍️</div>
+              <div class="upload-label">Signature <span style="color:#dc2626">*</span></div>
+              <div class="upload-hint">JPG/PNG, max 2MB</div>
+              <div class="upload-filename" id="name-signature"></div>
+            </div>
+            <div class="upload-box" id="box-aadhaar" onclick="triggerUpload('aadhaar_doc')">
+              <input type="file" name="aadhaar_doc" id="aadhaar_doc" accept="image/*,.pdf" onchange="fileSelected(this,'box-aadhaar')">
+              <div class="upload-icon">🪪</div>
+              <div class="upload-label">Aadhaar Card <span style="color:#dc2626">*</span></div>
+              <div class="upload-hint">JPG/PNG/PDF, max 5MB</div>
+              <div class="upload-filename" id="name-aadhaar_doc"></div>
             </div>
           </div>
         </div>
 
-        <!-- ── Correction Fields Table (only for Correction PAN) ── -->
-        <div class="form-card doc-section" id="correction-fields-card">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        <!-- Correction PAN uploads -->
+        <div class="upload-section" id="uploads-correction">
+          <div class="upload-grid">
+            <div class="upload-box" id="box-photo2" onclick="triggerUpload('photo')">
+              <input type="file" name="photo" id="photo2" accept="image/*" onchange="fileSelected(this,'box-photo2')">
+              <div class="upload-icon">📷</div>
+              <div class="upload-label">Passport Photo</div>
+              <div class="upload-hint">JPG/PNG, max 2MB</div>
+              <div class="upload-filename" id="name-photo2"></div>
             </div>
-            <div>
-              <h4>Fields to Correct</h4>
-              <p>Select "Correction" next to each field you want to change</p>
+            <div class="upload-box" id="box-signature2" onclick="triggerUpload('signature')">
+              <input type="file" name="signature" id="signature2" accept="image/*" onchange="fileSelected(this,'box-signature2')">
+              <div class="upload-icon">✍️</div>
+              <div class="upload-label">Signature</div>
+              <div class="upload-hint">JPG/PNG, max 2MB</div>
+              <div class="upload-filename" id="name-signature2"></div>
             </div>
-          </div>
-          <div class="form-card-body" style="padding-top:8px;">
-            <table class="corr-table">
-              <tr>
-                <td class="corr-field-icon">👤</td>
-                <td>
-                  <div class="corr-field-name">Name</div>
-                  <div class="corr-field-desc">Full name spelling or change</div>
-                </td>
-                <td style="text-align:right;">
-                  <select name="cf_name" class="corr-status-select no-change" onchange="updateSelect(this)">
-                    <option value="No Change">— No Change</option>
-                    <option value="Correction">✏️ Correction</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="corr-field-icon">📅</td>
-                <td>
-                  <div class="corr-field-name">Date of Birth</div>
-                  <div class="corr-field-desc">Incorrect DOB on PAN card</div>
-                </td>
-                <td style="text-align:right;">
-                  <select name="cf_dob" class="corr-status-select no-change" onchange="updateSelect(this)">
-                    <option value="No Change">— No Change</option>
-                    <option value="Correction">✏️ Correction</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="corr-field-icon">👨‍👦</td>
-                <td>
-                  <div class="corr-field-name">Father's Name</div>
-                  <div class="corr-field-desc">Father name spelling or change</div>
-                </td>
-                <td style="text-align:right;">
-                  <select name="cf_father" class="corr-status-select no-change" onchange="updateSelect(this)">
-                    <option value="No Change">— No Change</option>
-                    <option value="Correction">✏️ Correction</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="corr-field-icon">⚧</td>
-                <td>
-                  <div class="corr-field-name">Gender</div>
-                  <div class="corr-field-desc">Gender correction on PAN</div>
-                </td>
-                <td style="text-align:right;">
-                  <select name="cf_gender" class="corr-status-select no-change" onchange="updateSelect(this)">
-                    <option value="No Change">— No Change</option>
-                    <option value="Correction">✏️ Correction</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="corr-field-icon">🏠</td>
-                <td>
-                  <div class="corr-field-name">Address</div>
-                  <div class="corr-field-desc">Update residential address</div>
-                </td>
-                <td style="text-align:right;">
-                  <select name="cf_address" class="corr-status-select no-change" onchange="updateSelect(this)">
-                    <option value="No Change">— No Change</option>
-                    <option value="Correction">✏️ Correction</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="corr-field-icon">📷</td>
-                <td>
-                  <div class="corr-field-name">Photo / Signature</div>
-                  <div class="corr-field-desc">Update photo or signature on card</div>
-                </td>
-                <td style="text-align:right;">
-                  <select name="cf_photo" class="corr-status-select no-change" onchange="updateSelect(this)">
-                    <option value="No Change">— No Change</option>
-                    <option value="Correction">✏️ Correction</option>
-                  </select>
-                </td>
-              </tr>
-            </table>
-            <p style="font-size:0.78rem; color:#f39c12; margin-top:14px;">
-              ⚠️ Enter the <strong>corrected / new values</strong> in the form fields below.
-            </p>
+            <div class="upload-box" id="box-aadhaar2" onclick="triggerUpload('aadhaar_doc')">
+              <input type="file" name="aadhaar_doc" id="aadhaar_doc2" accept="image/*,.pdf" onchange="fileSelected(this,'box-aadhaar2')">
+              <div class="upload-icon">🪪</div>
+              <div class="upload-label">Aadhaar Card</div>
+              <div class="upload-hint">JPG/PNG/PDF</div>
+              <div class="upload-filename" id="name-aadhaar_doc2"></div>
+            </div>
+            <div class="upload-box" id="box-additional" onclick="triggerUpload('additional_doc')">
+              <input type="file" name="additional_doc" id="additional_doc" accept="image/*,.pdf" onchange="fileSelected(this,'box-additional')">
+              <div class="upload-icon">📄</div>
+              <div class="upload-label">Additional Document</div>
+              <div class="upload-hint">Supporting document</div>
+              <div class="upload-filename" id="name-additional_doc"></div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- ── Personal Information ── -->
-        <div class="form-card">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-            </div>
-            <div><h4>Personal Information</h4><p>Legal name and date of birth as per Aadhaar</p></div>
-          </div>
-          <div class="form-card-body">
-            <!-- Name fields -->
-            <div class="form-row three">
-              <div class="form-group">
-                <label>Last Name / Surname *</label>
-                <input type="text" name="last_name" placeholder="e.g. THANGAPPAN" required style="text-transform:uppercase;">
-              </div>
-              <div class="form-group">
-                <label>First Name *</label>
-                <input type="text" name="first_name" placeholder="e.g. SHEEBA" required style="text-transform:uppercase;">
-              </div>
-              <div class="form-group">
-                <label>Middle Name <span style="font-weight:400;color:#aaa;font-size:0.75rem;">(optional)</span></label>
-                <input type="text" name="middle_name" placeholder="If applicable" style="text-transform:uppercase;">
-              </div>
-            </div>
-            <!-- Name on PAN -->
-            <div class="form-group" style="margin-top:4px;">
-              <label>Name to Print on PAN Card *
-                <span style="font-weight:400; color:#888; font-size:0.75rem; margin-left:6px;">
-                  (Abbreviations allowed — e.g. SHEEBA T)
-                </span>
-              </label>
-              <input type="text" name="full_name" placeholder="e.g. SHEEBA T" required style="text-transform:uppercase;">
-              <div style="font-size:0.75rem; color:#aaa; margin-top:5px;">
-                💡 This name will appear exactly as typed on your PAN card
-              </div>
-            </div>
-            <!-- Father name + DOB + Gender -->
-            <div class="form-row three" style="margin-top:4px;">
-              <div class="form-group">
-                <label>Father's Full Name *</label>
-                <input type="text" name="father_name" placeholder="Father's name" required style="text-transform:uppercase;">
-              </div>
-              <div class="form-group">
-                <label>Date of Birth *</label>
-                <input type="date" name="dob" required>
-              </div>
-              <div class="form-group">
-                <label>Gender *</label>
-                <select name="gender" required>
-                  <option value="">Select Gender</option>
-                  <option>Male</option><option>Female</option><option>Transgender</option>
-                </select>
-              </div>
-            </div>
+      <!-- Submit -->
+      <div class="card">
+        <div class="submit-area">
+          <a href="/dashboard" class="btn-cancel">Cancel</a>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <span class="fee-note">₹150 will be deducted from your wallet</span>
+            {% if user.wallet >= 150 %}
+            <button type="submit" class="btn-submit">Submit Application →</button>
+            {% else %}
+            <button type="button" class="btn-submit" disabled>Insufficient Balance</button>
+            {% endif %}
           </div>
         </div>
+      </div>
 
-        <!-- ── Contact Details ── -->
-        <div class="form-card">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
-            </div>
-            <div><h4>Contact Details</h4><p>Mobile, email and Aadhaar number</p></div>
-          </div>
-          <div class="form-card-body">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Mobile Number *</label>
-                <input type="tel" name="mobile" placeholder="10-digit mobile number" maxlength="10" required>
-              </div>
-              <div class="form-group">
-                <label>Email Address *</label>
-                <input type="email" name="email" placeholder="your@email.com" required>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Aadhaar Number *</label>
-                <input type="text" name="aadhaar" placeholder="12-digit Aadhaar number" maxlength="12" required>
-              </div>
-              <div class="form-group">
-                <label>PAN Type *</label>
-                <select name="pan_type" required>
-                  <option value="">Select Type</option>
-                  <option>Individual</option><option>Company</option>
-                  <option>HUF (Hindu Undivided Family)</option>
-                  <option>Firm/LLP</option><option>Trust</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Address ── -->
-        <div class="form-card">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
-            </div>
-            <div><h4>Address Details</h4><p>Current residential address</p></div>
-          </div>
-          <div class="form-card-body">
-            <div class="form-group">
-              <label>Full Address *</label>
-              <textarea name="address" rows="2" placeholder="Door no., Street, Area" required style="resize:vertical;"></textarea>
-            </div>
-            <div class="form-row three">
-              <div class="form-group">
-                <label>City *</label>
-                <input type="text" name="city" placeholder="City" required>
-              </div>
-              <div class="form-group">
-                <label>State *</label>
-                <select name="state" required>
-                  <option value="">Select State</option>
-                  <option>Tamil Nadu</option><option>Maharashtra</option><option>Karnataka</option>
-                  <option>Kerala</option><option>Andhra Pradesh</option><option>Telangana</option>
-                  <option>Gujarat</option><option>Rajasthan</option><option>Uttar Pradesh</option>
-                  <option>Delhi</option><option>West Bengal</option><option>Bihar</option>
-                  <option>Madhya Pradesh</option><option>Odisha</option><option>Punjab</option>
-                  <option>Haryana</option><option>Jharkhand</option><option>Assam</option><option>Other</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>PIN Code *</label>
-                <input type="text" name="pincode" placeholder="6-digit PIN" maxlength="6" required>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Documents — New PAN ── -->
-        <div class="form-card doc-section visible" id="docs-new">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/></svg>
-            </div>
-            <div><h4>Document Upload — New PAN</h4><p>Upload JPG, PNG or PDF. Max 2MB each.</p></div>
-          </div>
-          <div class="form-card-body">
-            <div class="form-row three">
-              <div class="form-group">
-                <label>Passport Photo <span class="required-tag">Required</span></label>
-                <div class="upload-box" id="box-photo">
-                  <input type="file" name="photo" accept=".jpg,.jpeg,.png" onchange="fileChosen(this,'box-photo')">
-                  <div class="up-icon">📷</div>
-                  <div class="up-label">Click to upload photo</div>
-                  <div class="up-types">JPG, PNG</div>
-                  <div class="file-name" id="fn-photo"></div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Signature <span class="required-tag">Required</span></label>
-                <div class="upload-box" id="box-sign">
-                  <input type="file" name="signature" accept=".jpg,.jpeg,.png" onchange="fileChosen(this,'box-sign')">
-                  <div class="up-icon">✍️</div>
-                  <div class="up-label">Click to upload signature</div>
-                  <div class="up-types">JPG, PNG</div>
-                  <div class="file-name" id="fn-sign"></div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Aadhaar Card <span class="required-tag">Required</span></label>
-                <div class="upload-box" id="box-aadhaar">
-                  <input type="file" name="aadhaar_doc" accept=".jpg,.jpeg,.png,.pdf" onchange="fileChosen(this,'box-aadhaar')">
-                  <div class="up-icon">🪪</div>
-                  <div class="up-label">Click to upload Aadhaar</div>
-                  <div class="up-types">JPG, PNG, PDF</div>
-                  <div class="file-name" id="fn-aadhaar"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Documents — Correction PAN ── -->
-        <div class="form-card doc-section" id="docs-correction">
-          <div class="form-card-header">
-            <div class="section-icon">
-              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/></svg>
-            </div>
-            <div><h4>Document Upload — Correction PAN</h4><p>Upload JPG, PNG or PDF. Max 2MB each.</p></div>
-          </div>
-          <div class="form-card-body">
-            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr; gap:16px;">
-              <div class="form-group">
-                <label>Passport Photo <span class="required-tag">Required</span></label>
-                <div class="upload-box" id="box-photo2">
-                  <input type="file" name="photo" accept=".jpg,.jpeg,.png" onchange="fileChosen(this,'box-photo2')" disabled>
-                  <div class="up-icon">📷</div><div class="up-label">Upload photo</div>
-                  <div class="up-types">JPG, PNG</div>
-                  <div class="file-name" id="fn-photo2"></div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Signature <span class="required-tag">Required</span></label>
-                <div class="upload-box" id="box-sign2">
-                  <input type="file" name="signature" accept=".jpg,.jpeg,.png" onchange="fileChosen(this,'box-sign2')" disabled>
-                  <div class="up-icon">✍️</div><div class="up-label">Upload signature</div>
-                  <div class="up-types">JPG, PNG</div>
-                  <div class="file-name" id="fn-sign2"></div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Aadhaar Card <span class="required-tag">Required</span></label>
-                <div class="upload-box" id="box-aadhaar2">
-                  <input type="file" name="aadhaar_doc" accept=".jpg,.jpeg,.png,.pdf" onchange="fileChosen(this,'box-aadhaar2')" disabled>
-                  <div class="up-icon">🪪</div><div class="up-label">Upload Aadhaar</div>
-                  <div class="up-types">JPG, PNG, PDF</div>
-                  <div class="file-name" id="fn-aadhaar2"></div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Additional Document <span class="optional-tag">Extra Proof</span></label>
-                <div class="upload-box" id="box-adddoc">
-                  <input type="file" name="additional_doc" accept=".jpg,.jpeg,.png,.pdf" onchange="fileChosen(this,'box-adddoc')" disabled>
-                  <div class="up-icon">📎</div><div class="up-label">Upload extra doc</div>
-                  <div class="up-types">JPG, PNG, PDF</div>
-                  <div class="file-name" id="fn-adddoc"></div>
-                </div>
-              </div>
-            </div>
-            <p style="font-size:0.78rem; color:#888; margin-top:8px;">
-              📌 Additional: Birth certificate, Marriage certificate, Gazette notification, or any supporting proof.
-            </p>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <a href="{{ url_for('dashboard') }}" class="btn-cancel">Cancel</a>
-          {% if balance >= pan_cost %}
-          <button type="submit" class="btn-submit">Submit Application → (₹{{ pan_cost }} will be deducted)</button>
-          {% else %}
-          <button type="button" class="btn-submit" style="opacity:0.5;cursor:not-allowed;" title="Insufficient wallet balance">Insufficient Balance — Contact Admin</button>
-          {% endif %}
-        </div>
-      </form>
-    </div>
-  </main>
+    </form>
+  </div>
 </div>
 
 <script>
-function switchCategory(cat) {
-  document.getElementById('tab-new').classList.toggle('active', cat === 'new');
-  document.getElementById('tab-correction').classList.toggle('active', cat === 'correction');
-  document.getElementById('docs-new').classList.toggle('visible', cat === 'new');
-  document.getElementById('docs-correction').classList.toggle('visible', cat === 'correction');
-  document.getElementById('correction-fields-card').classList.toggle('visible', cat === 'correction');
-  document.querySelectorAll('#docs-new input[type=file]').forEach(i => i.disabled = cat !== 'new');
-  document.querySelectorAll('#docs-correction input[type=file]').forEach(i => i.disabled = cat !== 'correction');
+function toggleDropdown(){document.getElementById('userDropdown').classList.toggle('show')}
+document.addEventListener('click',function(e){if(!e.target.closest('.user-menu'))document.getElementById('userDropdown').classList.remove('show')});
+
+function switchCategory(type){
+  document.getElementById('tab-new').classList.toggle('active', type==='new');
+  document.getElementById('tab-correction').classList.toggle('active', type==='correction');
+  document.getElementById('correction-card').style.display = type==='correction'?'block':'none';
+  document.getElementById('uploads-new').classList.toggle('show', type==='new');
+  document.getElementById('uploads-correction').classList.toggle('show', type==='correction');
 }
 
-function updateSelect(sel) {
-  sel.className = 'corr-status-select ' + (sel.value === 'Correction' ? 'correction' : 'no-change');
+function triggerUpload(id){
+  var el = document.getElementById(id) || document.getElementById(id+'2');
+  if(el) el.click();
 }
 
-function fileChosen(input, boxId) {
-  const box = document.getElementById(boxId);
-  const fnEl = box.querySelector('.file-name');
-  if (input.files && input.files[0]) {
+function fileSelected(input, boxId){
+  var box = document.getElementById(boxId);
+  var nameId = 'name-' + input.id;
+  if(input.files && input.files[0]){
     box.classList.add('has-file');
-    fnEl.style.display = 'block';
-    fnEl.textContent = '✓ ' + input.files[0].name;
-  } else {
-    box.classList.remove('has-file');
-    fnEl.style.display = 'none';
+    var nameEl = document.getElementById(nameId);
+    if(nameEl) nameEl.textContent = '✓ ' + input.files[0].name;
   }
 }
-
-// Init
-document.querySelectorAll('#docs-new input[type=file]').forEach(i => i.disabled = false);
-document.querySelectorAll('#docs-correction input[type=file]').forEach(i => i.disabled = true);
-
-function toggleDropdown() {
-  document.getElementById('userDropdown').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.topbar-right')) {
-    document.getElementById('userDropdown').classList.remove('open');
-  }
-});
 </script>
 </body>
 </html>
