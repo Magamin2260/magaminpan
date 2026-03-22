@@ -249,7 +249,7 @@ def admin():
     cur = conn.cursor()
     cur.execute('''SELECT a.*, u.username FROM applications a
                    LEFT JOIN users u ON a.user_id = u.id
-                   ORDER BY a.created_at DESC''')
+                   ORDER BY a.id DESC''')
     apps = cur.fetchall()
     cur.execute('''SELECT u.*, COUNT(a.id) as app_count
                    FROM users u LEFT JOIN applications a ON u.id = a.user_id
