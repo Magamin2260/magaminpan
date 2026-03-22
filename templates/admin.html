@@ -349,7 +349,7 @@
             <div class="txn-dot {{ t.txn_type }}">{{ '➕' if t.txn_type=='credit' else '➖' }}</div>
             <div style="flex:1;">
               <div style="font-size:0.85rem;color:var(--navy);font-weight:500;">{{ t.username }} — {{ t.description }}</div>
-              <div style="font-size:0.72rem;color:#aaa;">{{ t.created_at }}</div>
+              <div style="font-size:0.72rem;color:#aaa;">{{ t.created_at.strftime('%Y-%m-%d %H:%M') if t.created_at else '' }}</div>
             </div>
             <div class="txn-amt {{ t.txn_type }}">{{ '+' if t.txn_type=='credit' else '-' }}₹{{ "%.0f"|format(t.amount) }}</div>
           </div>
