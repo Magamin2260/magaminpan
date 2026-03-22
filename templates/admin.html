@@ -182,7 +182,7 @@
             <span class="result-count" id="resultCount"></span>
           </div>
         </div>
-        {% if applications %}
+        {% if apps %}
         <table id="appTable">
           <thead>
             <tr><th>ID</th><th>Applicant</th><th>Full Name</th><th>Category</th><th>Mobile</th><th>Submitted</th><th>Status</th><th>Details</th><th>Action</th></tr>
@@ -191,7 +191,7 @@
             {% for app in apps %}
             <tr class="app-row"
                 data-status="{{ app.status.lower() }}"
-                data-search="{{ app.id }} {{ app.full_name|lower }} {{ app.username|lower }} {{ app.mobile }} {{ app.email|lower }} {{ app.pan_type|lower }} {{ app.app_category|lower }} {{ app.submitted_at }}">
+                data-search="{{ app.id }} {{ app.full_name|lower }} {{ app.username|lower }} {{ app.mobile }} {{ app.email|lower }} {{ app.pan_type|lower }} {{ app.app_category|lower }} {{ app.created_at.strftime('%Y-%m-%d %H:%M') if app.created_at else '' }}">
               <td><strong>#{{ app.id }}</strong></td>
               <td>{{ app.username }}</td>
               <td>
@@ -204,7 +204,7 @@
                 </span>
               </td>
               <td>{{ app.mobile }}</td>
-              <td style="font-size:0.8rem;color:#888;">{{ app.submitted_at }}</td>
+              <td style="font-size:0.8rem;color:#888;">{{ app.created_at.strftime('%Y-%m-%d %H:%M') if app.created_at else '' }}</td>
               <td><span class="status-badge {{ app.status.lower() }}">{{ app.status }}</span></td>
               <td>
                 <button class="view-btn" onclick="openModal({{ app.id }})">
@@ -343,8 +343,8 @@
           <h3>Transaction History</h3>
           <span style="font-size:0.8rem;color:#888;">Last 50 transactions</span>
         </div>
-        {% if wallet_txns %}
-          {% for t in wallet_txns %}
+        {% if transactions %}
+          {% for t in transactions %}
           <div class="txn-row">
             <div class="txn-dot {{ t.txn_type }}">{{ '➕' if t.txn_type=='credit' else '➖' }}</div>
             <div style="flex:1;">
