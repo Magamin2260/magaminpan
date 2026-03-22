@@ -319,7 +319,7 @@
               </td>
               <td style="font-size:0.85rem;color:#555;">{{ u.app_count }} applied</td>
               <td>
-                <form method="POST" action="{{ url_for('add_wallet') }}" class="add-inline">
+                <form method="POST" action="{{ url_for('add_wallet', user_id=u.id) }}" class="add-inline">
                   <input type="hidden" name="user_id" value="{{ u.id }}">
                   <input type="number" name="amount" placeholder="₹ amt" min="1" required>
                   <button type="submit" class="btn-add-sm">+ Add</button>
