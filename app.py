@@ -343,6 +343,24 @@ def download_receipt(app_id):
                                    download_name=f'PAN_Receipt_{app_id}.pdf')
     flash('Receipt not found', 'error')
     return redirect(url_for('dashboard'))
-
+@app.route('/admin/detail/<int:app_id>')
+def admin_detail(app_id):
+    if session.get('role') != 'admin':
+        return '', 403
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT a.*, u.username FROM applications a LEFT JOIN users u ON a.user_id=u.id WHERE a.id=%s', (app_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not row:
+        return '', 404
+    from flask import jsonify
+    import datetime
+    d = dict(row)
+    for k,v in d.items():
+        if isinstance(v, datetime.datetime):
+            d[k] = v.strftime('%Y-%m-%d %H:%M')
+    return jsonify(d)
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
