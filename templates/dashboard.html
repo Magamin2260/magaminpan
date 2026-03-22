@@ -266,7 +266,7 @@ tr:hover td{background:#fdf9f0}
             <td>{{ app.app_category or 'New PAN' }}</td>
             <td>{{ app.full_name or ((app.first_name or '') + ' ' + (app.last_name or '')) }}</td>
             <td>{{ app.pan_type }}</td>
-            <td>{{ app.created_at[:10] if app.created_at else '-' }}</td>
+            <td>{{ app.created_at.strftime('%Y-%m-%d') if app.created_at else '-' if app.created_at else '-' }}</td>
             <td><span class="badge {{ app.status|lower }}">{{ app.status }}</span></td>
             <td>
               {% if app.receipt %}
@@ -311,7 +311,7 @@ tr:hover td{background:#fdf9f0}
             </div>
             <div>
               <div class="txn-desc">{{ txn.description }}</div>
-              <div class="txn-date">{{ txn.created_at[:16] if txn.created_at else '' }}</div>
+              <div class="txn-date">{{ txn.created_at.strftime('%Y-%m-%d %H:%M') if txn.created_at else '' if txn.created_at else '' }}</div>
             </div>
           </div>
           <div class="txn-amount {{ txn.type }}">
