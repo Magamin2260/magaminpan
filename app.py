@@ -3,10 +3,16 @@ import os
 import psycopg2
 import psycopg2.extras
 from werkzeug.utils import secure_filename
+import requests as http_requests
+import uuid
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+SUPABASE_URL = 'https://zlzrtyikwmbgdbscvemx.supabase.co'
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+SUPABASE_BUCKET = 'uploads'
 
 app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'),
@@ -18,6 +24,27 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_to_supabase(file_obj, original_filename):
+    try:
+        ext = original_filename.rsplit('.', 1)[1].lower()
+        unique_name = f"{uuid.uuid4().hex}.{ext}"
+        url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{unique_name}"
+        content_type = 'application/pdf' if ext == 'pdf' else f'image/{ext}'
+        headers = {
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': content_type,
+            'x-upsert': 'true'
+        }
+        file_obj.seek(0)
+        resp = http_requests.post(url, headers=headers, data=file_obj.read(), timeout=30)
+        if resp.status_code in (200, 201):
+            return f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{unique_name}"
+        else:
+            print(f"Supabase upload failed: {resp.status_code} {resp.text}")
+    except Exception as e:
+        print(f"Supabase upload error: {e}")
+    return None
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
@@ -141,7 +168,7 @@ def register():
             return redirect(url_for('login'))
         except:
             flash('Username already exists', 'error')
-    return render_template('login.html')
+    return render_template('login.html', register=True)
 
 @app.route('/logout')
 def logout():
@@ -175,12 +202,13 @@ def dashboard():
 def apply():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    PAN_COST = 150
     conn = get_db()
     cur = conn.cursor()
     cur.execute('SELECT * FROM users WHERE id=%s', (session['user_id'],))
     user = cur.fetchone()
     if request.method == 'POST':
-        if user['wallet'] < 150:
+        if user['wallet'] < PAN_COST:
             flash('Insufficient wallet balance. Please contact admin to add funds.', 'error')
             cur.close()
             conn.close()
@@ -189,7 +217,14 @@ def apply():
         def save_file(field):
             f = request.files.get(field)
             if f and f.filename and allowed_file(f.filename):
+                # Try Supabase first
+                if SUPABASE_KEY:
+                    url = upload_to_supabase(f, secure_filename(f.filename))
+                    if url:
+                        return url
+                # Fallback to local
                 fn = secure_filename(f.filename)
+                f.seek(0)
                 f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
                 return fn
             return None
@@ -198,10 +233,24 @@ def apply():
         first_name = request.form.get('first_name', '').upper()
         middle_name = request.form.get('middle_name', '').upper()
         full_name = request.form.get('full_name', '').upper()
-        father_last = request.form.get('father_last_name', '').upper()
-        father_first = request.form.get('father_first_name', '').upper()
-        father_middle = request.form.get('father_middle_name', '').upper()
-        father_name = f"{father_first} {father_middle} {father_last}".strip()
+        father_name_direct = request.form.get('father_name', '').upper()
+        if father_name_direct:
+            father_name = father_name_direct
+            father_first = father_name_direct
+            father_last = ''
+            father_middle = ''
+        else:
+            father_last = request.form.get('father_last_name', '').upper()
+            father_first = request.form.get('father_first_name', '').upper()
+            father_middle = request.form.get('father_middle_name', '').upper()
+            father_name = f"{father_first} {father_middle} {father_last}".strip()
+
+        correction_name   = request.form.get('correction_name') or request.form.get('cf_name', 'No Change')
+        correction_dob    = request.form.get('correction_dob')  or request.form.get('cf_dob', 'No Change')
+        correction_father = request.form.get('correction_father') or request.form.get('cf_father', 'No Change')
+        correction_gender = request.form.get('correction_gender') or request.form.get('cf_gender', 'No Change')
+        correction_address= request.form.get('correction_address') or request.form.get('cf_address', 'No Change')
+        correction_photo  = request.form.get('correction_photo') or request.form.get('cf_photo', 'No Change')
 
         cur.execute('''INSERT INTO applications
             (user_id, app_category, last_name, first_name, middle_name, full_name,
@@ -222,24 +271,20 @@ def apply():
              request.form.get('state'), request.form.get('pincode'),
              save_file('photo'), save_file('signature'),
              save_file('aadhaar_doc'), save_file('additional_doc'),
-             request.form.get('correction_name', 'No Change'),
-             request.form.get('correction_dob', 'No Change'),
-             request.form.get('correction_father', 'No Change'),
-             request.form.get('correction_gender', 'No Change'),
-             request.form.get('correction_address', 'No Change'),
-             request.form.get('correction_photo', 'No Change')))
+             correction_name, correction_dob, correction_father,
+             correction_gender, correction_address, correction_photo))
 
-        cur.execute('UPDATE users SET wallet = wallet - 150 WHERE id=%s', (session['user_id'],))
+        cur.execute('UPDATE users SET wallet = wallet - %s WHERE id=%s', (PAN_COST, session['user_id']))
         cur.execute('INSERT INTO wallet_transactions (user_id, amount, type, description) VALUES (%s,%s,%s,%s)',
-                     (session['user_id'], -150, 'debit', 'PAN Application Fee'))
+                     (session['user_id'], -PAN_COST, 'debit', 'PAN Application Fee'))
         conn.commit()
         cur.close()
         conn.close()
-        flash('Application submitted successfully! ₹150 deducted from wallet.', 'success')
+        flash(f'Application submitted successfully! ₹{PAN_COST} deducted from wallet.', 'success')
         return redirect(url_for('dashboard'))
     cur.close()
     conn.close()
-    return render_template('form.html', user=user)
+    return render_template('form.html', user=user, balance=user['wallet'], pan_cost=PAN_COST)
 
 @app.route('/admin')
 def admin():
@@ -271,6 +316,28 @@ def admin():
     }
     return render_template('admin.html', apps=apps, users=users, transactions=transactions, stats=stats, pan_cost=150)
 
+@app.route('/admin/detail/<int:app_id>')
+def admin_detail(app_id):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM applications WHERE id=%s', (app_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not row:
+        return {'error': 'Not found'}, 404
+    d = dict(row)
+    corrections = []
+    for field in ['correction_name','correction_dob','correction_father','correction_gender','correction_address','correction_photo']:
+        val = d.get(field, 'No Change')
+        if val and val != 'No Change':
+            corrections.append(field.replace('correction_','').title())
+    d['correction_fields'] = ', '.join(corrections)
+    d['submitted_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M') if d.get('created_at') else ''
+    return d
+
 @app.route('/update_status/<int:app_id>', methods=['POST'])
 def update_status(app_id):
     if session.get('role') != 'admin':
@@ -278,15 +345,19 @@ def update_status(app_id):
     status = request.form.get('status')
     conn = get_db()
     cur = conn.cursor()
-    receipt_filename = None
-    if status == 'Processing' and 'receipt' in request.files:
+    receipt_url = None
+    if 'receipt' in request.files:
         f = request.files['receipt']
         if f and f.filename and allowed_file(f.filename):
-            fn = secure_filename(f.filename)
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-            receipt_filename = fn
-    if receipt_filename:
-        cur.execute('UPDATE applications SET status=%s, receipt=%s WHERE id=%s', (status, receipt_filename, app_id))
+            if SUPABASE_KEY:
+                receipt_url = upload_to_supabase(f, secure_filename(f.filename))
+            if not receipt_url:
+                fn = secure_filename(f.filename)
+                f.seek(0)
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
+                receipt_url = fn
+    if receipt_url:
+        cur.execute('UPDATE applications SET status=%s, receipt=%s WHERE id=%s', (status, receipt_url, app_id))
     else:
         cur.execute('UPDATE applications SET status=%s WHERE id=%s', (status, app_id))
     conn.commit()
@@ -313,6 +384,7 @@ def add_wallet(user_id):
     return redirect(url_for('admin') + '#wallet')
 
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
+@app.route('/admin/user/delete/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
@@ -338,45 +410,15 @@ def download_receipt(app_id):
     cur.close()
     conn.close()
     if app_row and app_row['receipt']:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], app_row['receipt'],
+        receipt = app_row['receipt']
+        # If it's a Supabase URL, redirect directly
+        if receipt.startswith('http'):
+            return redirect(receipt)
+        return send_from_directory(app.config['UPLOAD_FOLDER'], receipt,
                                    as_attachment=True,
                                    download_name=f'PAN_Receipt_{app_id}.pdf')
     flash('Receipt not found', 'error')
     return redirect(url_for('dashboard'))
-@app.route('/admin/detail/<int:app_id>')
-def admin_detail(app_id):
-    if session.get('role') != 'admin':
-        return '', 403
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute('SELECT a.*, u.username FROM applications a LEFT JOIN users u ON a.user_id=u.id WHERE a.id=%s', (app_id,))
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-    if not row:
-        return '', 404
-    from flask import jsonify
-    import datetime
-    d = dict(row)
-    for k,v in d.items():
-        if isinstance(v, datetime.datetime):
-            d[k] = v.strftime('%Y-%m-%d %H:%M')
-    return jsonify(d)
-@app.route('/admin/change-credentials', methods=['POST'])
-def change_credentials():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-    new_username = request.form.get('new_username')
-    new_password = request.form.get('new_password')
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE users SET username=%s, password=%s WHERE role='admin'",
-                (new_username, new_password))
-    conn.commit()
-    cur.close()
-    conn.close()
-    session['username'] = new_username
-    flash('Admin credentials updated successfully!')
-    return redirect(url_for('admin'))
+
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
