@@ -525,7 +525,7 @@ function openModal(id) {
       document.getElementById('m-docs').innerHTML = docs.map(doc => {
         if (!doc.file) return `<div class="doc-thumb empty"><div class="doc-pdf">${doc.icon}</div><div class="doc-label">${doc.label}</div><div style="font-size:.68rem;color:#bbb;margin-top:4px;">Not uploaded</div></div>`;
         const ext = doc.file.split('.').pop().toLowerCase();
-        const url = BASE + doc.file;
+        const url = doc.file.startsWith('http') ? doc.file : BASE + doc.file;
         if (ext==='pdf') return `<div class="doc-thumb"><div class="doc-pdf">📄</div><div class="doc-label">${doc.label}</div><a href="${url}" target="_blank">View PDF</a></div>`;
         return `<div class="doc-thumb"><img src="${url}" alt="${doc.label}"><div class="doc-label">${doc.label}</div><a href="${url}" target="_blank">View Full</a></div>`;
       }).join('');
