@@ -420,5 +420,25 @@ def download_receipt(app_id):
     flash('Receipt not found', 'error')
     return redirect(url_for('dashboard'))
 
+@app.route('/admin/change-credentials', methods=['POST'])
+def change_credentials():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    new_username = request.form.get('new_username', '').strip()
+    new_password = request.form.get('new_password', '').strip()
+    if not new_username or not new_password:
+        flash('Username and Password cannot be empty!', 'error')
+        return redirect(url_for('admin'))
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('UPDATE users SET username=%s, password=%s WHERE id=%s',
+                (new_username, new_password, session['user_id']))
+    conn.commit()
+    cur.close()
+    conn.close()
+    session['username'] = new_username
+    flash('Admin credentials updated successfully!', 'success')
+    return redirect(url_for('admin'))
+
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
